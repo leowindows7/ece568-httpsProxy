@@ -34,6 +34,10 @@ void create_daemon() {
     exit(EXIT_FAILURE);
   }
 
+  if (pid != 0) {
+    exit(EXIT_SUCCESS);
+  }  // exit parent
+
   // redirect stdin, stderr, stdout to /dev/null
   int dev_null_fd = open("/dev/null", O_RDWR);
   if (dev_null_fd == -1) {
