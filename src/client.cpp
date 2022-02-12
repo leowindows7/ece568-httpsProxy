@@ -23,7 +23,11 @@ void Client::connectToHost(std::string hostname, int port_num) {
     exit(EXIT_FAILURE);
   }
 
-  char msg[] = "I am Ian\n";
+  char msg[] = "CONNECT www.google.com:443 HTTP/1.1 \
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:95.0) Gecko/20100101 Firefox/95.0 \
+Proxy-Connection: keep-alive \
+Connection: keep-alive \
+Host: www.google.com:443";
   if (send(socket_fd, msg, strlen(msg), 0) == -1) {
     // TOOO: refactor to throw exception
     perror("send");
