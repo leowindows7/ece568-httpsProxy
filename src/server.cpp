@@ -1,10 +1,7 @@
 #include "server.hpp"
 
-#include <unistd.h>
-
 #include <cstdlib>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -12,10 +9,19 @@
 #include "inputParser.hpp"
 #include "network.hpp"
 
-void Server::setupServer(const int port_num) {
-  Network * connect = new Network();
+/**
+ * Constructor for scoket
+ */
+Server::Server() : connect(new Network()) {
+}
+
+/**
+ * Setup socket for the server on specified port number
+ * @param port_num: the port for socket to bind on
+ **/
+int Server::setupServer(const int port_num) {
   std::pair<int, struct addrinfo *> socketInfo =
-      connect->connectSetup<int, struct addrinfo *>(NULL, port_num);
+      connect.get()->connectSetup<int, struct addrinfo *>(NULL, port_num);
 
   int socket_fd = socketInfo.first;
   struct addrinfo * serviceinfo = socketInfo.second;
@@ -39,47 +45,59 @@ void Server::setupServer(const int port_num) {
     exit(EXIT_FAILURE);
   }
 
+  return socket_fd;
+}
+
+/**
+ * Bootup Server on a given socket
+ * @param socket_fd: socket field number
+ **/
+
+void Server::serverBoot(int socket_fd) {
   while (1) {
-    sleep(1);
-    struct sockaddr_storage socket_addr;
-    socklen_t socket_addr_len = sizeof(socket_addr);
-    int client_connection_fd;
-    client_connection_fd =
-        accept(socket_fd, (struct sockaddr *)&socket_addr, &socket_addr_len);
-    if (client_connection_fd == -1) {
-      perror("accept");
-      exit(EXIT_FAILURE);
-    }
-
-    char buf[512] = {0};
-    int num_bytes = 0;
-    if ((num_bytes = recv(client_connection_fd, buf, sizeof(buf), 0)) == -1) {
-      perror("recv");
-      exit(EXIT_FAILURE);
-    }
-
-    buf[num_bytes] = '\0';
+    // accept
+    int client_connection_fd = acceptRequest(socket_fd);
+    // receive message
+    std::string buf = processRequest(client_connection_fd);
     std::cout << buf << std::endl;
 
-    if (send(client_connection_fd, buf, sizeof(buf), 0) == -1) {
+    // send response
+    char msg[] = "greeting from server\n";
+    if (send(client_connection_fd, msg, strlen(msg), 0) == -1) {
       perror("send");
       exit(EXIT_FAILURE);
     }
   }
-
-  freeaddrinfo(serviceinfo);
-  if (close(socket_fd) == -1) {
-    // TODO: throw exception
-    perror("close");
-    exit(EXIT_FAILURE);
-  }
 }
 
-int main(int argc, char ** argv) {
-  std::vector<std::string> opts = {"port"};
-  InputParser parser;
-  std::unordered_map<std::string, int> parsedOpt = parser.parseOpt<int>(argc, argv, opts);
+int Server::acceptRequest(int socket_fd) {
+  struct sockaddr_storage socket_addr;
+  socklen_t socket_addr_len = sizeof(socket_addr);
+  int client_connection_fd = 0;
+  client_connection_fd =
+      accept(socket_fd, (struct sockaddr *)&socket_addr, &socket_addr_len);
+  if (client_connection_fd == -1) {
+    perror("accept");
+    exit(EXIT_FAILURE);
+  }
 
-  Server server;
-  server.setupServer(parsedOpt["port"]);
+  return client_connection_fd;
+}
+
+std::string Server::processRequest(int connection_fd) {
+  char buf[512] = {0};
+  int num_bytes = 0;
+  if ((num_bytes = recv(connection_fd, buf, sizeof(buf), 0)) == -1) {
+    perror("recv");
+    exit(EXIT_FAILURE);
+  }
+  buf[num_bytes] = '\0';
+
+  return std::string(buf);
+}
+
+/** 
+ * Destructor for server class
+ **/
+Server::~Server() {
 }

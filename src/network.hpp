@@ -4,16 +4,19 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include <cstring>
 #include <utility>
 
 class Network {
+  int socketfd;
+  struct addrinfo * socketInfo;
+
  public:
   template<typename T, typename U>
   std::pair<T, U> connectSetup(const char * hostName, int port_num) {
     struct addrinfo hints;
-    struct addrinfo * serviceinfo;
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
@@ -22,24 +25,34 @@ class Network {
 
     int status = 0;
     if ((status = getaddrinfo(
-             hostName, std::to_string(port_num).c_str(), &hints, &serviceinfo)) != 0) {
+             hostName, std::to_string(port_num).c_str(), &hints, &socketInfo)) != 0) {
       // TODO: throw exception
       fprintf(stderr, "Error: getaddrinfo error\n");
       exit(EXIT_FAILURE);
     }
 
     // TODO: refactor to loop through linked list
-    int socket_fd = -1;
-    if ((socket_fd = socket(serviceinfo->ai_family,
-                            serviceinfo->ai_socktype,
-                            serviceinfo->ai_protocol)) == -1) {
+    if ((socketfd = socket(
+             socketInfo->ai_family, socketInfo->ai_socktype, socketInfo->ai_protocol)) ==
+        -1) {
       // TODO: throw exception
       perror("socket error");
       exit(EXIT_FAILURE);
     }
 
-    std::pair<T, U> connectInfo(socket_fd, serviceinfo);
+    std::pair<T, U> connectInfo(socketfd, socketInfo);
     return connectInfo;
+  }
+
+  Network() : socketfd(-1), socketInfo(nullptr) {}
+
+  ~Network() {
+    freeaddrinfo(socketInfo);
+    if (close(socketfd) == -1) {
+      // TODO: throw exception
+      perror("close");
+      exit(EXIT_FAILURE);
+    }
   }
 };
 
