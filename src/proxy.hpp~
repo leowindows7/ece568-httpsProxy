@@ -1,0 +1,13 @@
+#ifndef PROXY_HPP
+#define PROXY_HPP
+
+#include "client.hpp"
+#include "server.hpp"
+
+class Proxy : public Server {
+ public:
+  Proxy(int server_port_num);
+  void serverBoot();
+};
+
+#endif
