@@ -65,22 +65,23 @@ int main(int argc, char *argv[])
     //std::istream ifs;
     string url = "www.google.com";
     string get_http = "GET / HTTP/1.1\nHost: " + 
-    url + 
-    "\nConnection: close\n\n";
-    char buffer[10000];
+    url+ "\nConnection: keep-alive\n\n";
+    char buffer[8192];
     int nDataLength;
     string website_HTML;
     send(socket_fd,get_http.c_str(), strlen(get_http.c_str()),0 );
     recv(socket_fd, buffer, sizeof(buffer), 0);
-    while ((nDataLength = recv(socket_fd,buffer,10000,0)) > 0){        
-        int i = 0;
-        while (buffer[i] >= 32 || buffer[i] == '\n' || buffer[i] == '\r'){
-            website_HTML+=buffer[i];
-            i += 1;
-        }               
-    }
-    
-    cout <<  website_HTML << endl;
+    // while ((nDataLength = recv(socket_fd, buffer, 512, 0)) > 0)
+    // {
+    //     int i = 0;
+    //     while (buffer[i] >= 32 || buffer[i] == '\n' || buffer[i] == '\r')
+    //     {
+    //         website_HTML += buffer[i];
+    //         i += 1;
+    //     }
+    // }
+    //buffer[511] = '\0';
+    cout <<  buffer << endl;
     freeaddrinfo(host_info_list);
     close(socket_fd);
 
