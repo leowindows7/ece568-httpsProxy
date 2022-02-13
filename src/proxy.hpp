@@ -4,10 +4,13 @@
 #include "client.hpp"
 #include "server.hpp"
 
+void sendToHost(std::string hostname, int port, int socketfd);
+
 class Proxy : public Server {
  public:
   int proxyServerSetup(int port);
   void serverBoot(int socketfd);
+  void dispatch_worker(std::string hostname, int port, int socketfd);
 };
 
 #endif
