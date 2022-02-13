@@ -10,7 +10,7 @@ client: $(CLIENT_OBJS) cliet-test.cpp
 server: $(SERVER_OBJS) server-test.cpp
 	$(CXX) -o $@ $(CXXFLAGS) $(SERVER_OBJS) server-test.cpp
 proxy: $(PROXY_OBJS)
-	$(CXX) -o $@ $(CXXFLAGS) $(PROXY_OBJS) $(SERVER_OBJS) $(CLIENT_OBJS)
+	$(CXX) -o $@ $(CXXFLAGS) $(PROXY_OBJS) $(SERVER_OBJS) $(CLIENT_OBJS) -lpthread
 
 %.o: %.c
 	$(CXX) $(CXXFLAGS) -c $<
