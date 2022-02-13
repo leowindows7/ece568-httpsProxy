@@ -14,7 +14,7 @@ map<string, string> httpResMap(string response)
     size_t pos = 0;
     string delimiter = "\n";
     string token;
-    response.find_first_not_of("\n");
+    response.find_first_not_of(delimiter);
     pos = response.find(delimiter);
     token = response.substr(0, pos);
     responseMap.insert({"Status", token});
@@ -28,13 +28,7 @@ map<string, string> httpResMap(string response)
     }
     response.erase(0, pos + delimiter.length());
     responseMap.insert({"Header", header});
-    // while ((pos = response.find(delimiter)) != string::npos)
-    // {
-    //     pos = response.find(delimiter);
-    //     token = response.substr(0, pos);
-    //     response.erase(0, pos + delimiter.length());
-    // }
-    // cout << pos <<endl;
+    responseMap.insert({"Body", response});
     return responseMap;
 }
 
@@ -108,8 +102,10 @@ int main()
     //}
     // buffer[511] = '\0';
     string website_response(buffer);
-    httpResMap(website_response);
-    // cout << website_response << endl;
+    map<string, string> responseMap = httpResMap(website_response);
+    cout << responseMap["Status"] <<endl;
+    cout << responseMap["Header"] <<endl;
+    cout << responseMap["Body"] <<endl;
     freeaddrinfo(host_info_list);
     close(socket_fd);
 
