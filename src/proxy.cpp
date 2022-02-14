@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <thread>
 
 #include "inputParser.hpp"
 
@@ -16,13 +17,25 @@ void Proxy::serverBoot(int socketfd) {
     std::string buf = processRequest(client_connection_fd);
     std::cout << "In Proxy:" << std::endl << buf << std::endl;
     // TODO: refactor this to use http parser
-    Client c;
-    char * recvbuf = c.connectToHost("vcm-24287.vm.duke.edu", 12345);
-    if (send(client_connection_fd, recvbuf, strlen(recvbuf), 0) == -1) {
-      perror("send");
-      exit(EXIT_FAILURE);
-    }
+    std::string hostname = "vcm-24287.vm.duke.edu";
+    int port = 12345;
+    dispatch_worker(hostname, port, client_connection_fd);
+    // sendToHost(hostname, port, client_connection_fd);
   }
+}
+
+void sendToHost(std::string hostname, int port, int socketfd) {
+  Client c;
+  char * recvbuf = NULL;
+  recvbuf = c.connectToHost(hostname, port);
+  if (send(socketfd, recvbuf, strlen(recvbuf), 0) == -1) {
+    perror("send");
+    exit(EXIT_FAILURE);
+  }
+}
+
+void Proxy::dispatch_worker(std::string hostname, int port, int socketfd) {
+  std::thread (sendToHost, hostname, port, socketfd).detach();
 }
 
 int main(int argc, char ** argv) {
