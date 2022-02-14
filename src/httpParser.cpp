@@ -58,4 +58,38 @@ std::map<std::string, std::string> httpResMap(std::string response) {
     responseMap.insert({tokenKey, tokenValue});
   }
   return responseMap;
+    std::string header = "";
+    while ((pos = response.find(delimiter)) != 1)
+    {
+        token = response.substr(0, pos);
+        header += token + "\n";
+        response.erase(0, pos + delimiter.length());
+    }
+    response.erase(0, pos + delimiter.length());
+    // body
+    responseMap.insert({"Body", response});
+    // parse header, each attribute before : will be used as key
+    std::string headerDeli = ":";
+    std::string tokenKey;
+    std::string tokenValue;
+    while ((pos = header.find(headerDeli)) != std::string::npos)
+    {
+        tokenKey = header.substr(0, pos);
+        // cout << tokenKey << endl;
+        header.erase(0, pos + headerDeli.length());
+        pos = header.find(delimiter);
+        tokenValue = header.substr(1, pos - 1);
+        // cout << tokenValue << endl;
+        header.erase(0, pos + delimiter.length());
+        responseMap.insert({tokenKey, tokenValue});
+    }
+    if(responseMap["Type"] == "Request"){
+        if((pos = responseMap["Host"].find(":")) > 0){
+            responseMap["Host"] = responseMap["Host"].substr(0, pos);
+            responseMap.insert({"Port", responseMap["Host"].substr(pos + 1, responseMap["Host"].length())});
+        } else {
+            responseMap.insert({"Port", "-1"});
+        }
+    }
+    return responseMap;
 }
