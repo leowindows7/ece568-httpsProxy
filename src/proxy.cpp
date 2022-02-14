@@ -35,8 +35,7 @@ void sendToHost(std::string hostname, int port, int socketfd) {
 }
 
 void Proxy::dispatch_worker(std::string hostname, int port, int socketfd) {
-  std::thread worker(sendToHost, hostname, port, socketfd);
-  worker.join();
+  std::thread (sendToHost, hostname, port, socketfd).detach();
 }
 
 int main(int argc, char ** argv) {
