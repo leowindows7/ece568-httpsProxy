@@ -23,15 +23,14 @@ char * Client::connectToHost(std::string hostname, int port_num) {
     throw std::exception();
   }
 
-  std::string http_request =
-      "GET / HTTP/1.1\nHost:" + hostname + "\nConnection: close\n\n";
+  std::string http_request = "GET / HTTP/1.1\nHost:" + hostname + "\n\n";
   if (send(socket_fd, http_request.c_str(), http_request.size(), 0) == -1) {
     // TOOO: refactor to throw exception
     perror("send");
     throw std::exception();
   }
 
-  char * recvbuffer = new char[512];
+  char * recvbuffer = new char[65536];
   if (recv(socket_fd, recvbuffer, sizeof(recvbuffer), 0) == -1) {
     perror("recv");
     throw std::exception();

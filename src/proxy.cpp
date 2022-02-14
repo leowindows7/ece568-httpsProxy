@@ -21,7 +21,7 @@ void Proxy::serverBoot(int socketfd) {
     // TODO: refactor this to use http parser
     std::map<std::string, std::string> headerMap = httpResMap(buf);
     std::string hostname = headerMap["Host"];
-    int port = headerMap["Port"];
+    int port = std::stoi(headerMap["Port"]);
     dispatch_worker(hostname, port, client_connection_fd);
     // sendToHost(hostname, port, client_connection_fd);
   }
@@ -31,6 +31,7 @@ void sendToHost(std::string hostname, int port, int socketfd) {
   Client c;
   char * recvbuf = NULL;
   recvbuf = c.connectToHost(hostname, port);
+  std::cout << recvbuf << std::endl;
   if (send(socketfd, recvbuf, strlen(recvbuf), 0) == -1) {
     perror("send");
     exit(EXIT_FAILURE);
