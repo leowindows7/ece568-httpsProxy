@@ -60,6 +60,14 @@ std::map<std::string, std::string> httpResMap(std::string response)
         header.erase(0, pos + delimiter.length());
         responseMap.insert({tokenKey, tokenValue});
     }
+    if(responseMap["Type"] == "Request"){
+        if((pos = responseMap["Host"].find(":")) > 0){
+            responseMap["Host"] = responseMap["Host"].substr(0, pos);
+            responseMap.insert({"Port", responseMap["Host"].substr(pos + 1, responseMap["Host"].length())});
+        } else {
+            responseMap.insert({"Port", "-1"});
+        }
+    }
     return responseMap;
 }
 
