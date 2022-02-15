@@ -16,7 +16,7 @@ proxy: $(PROXY_OBJS)
 httpParser: $(HTTP_OBJS) httpParser.cpp httpParser.hpp
 
 %.o: %.c
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CXX) $(CXXFLAGS) -c $< -lpthread
 
 .PHONY: clean
 clean:

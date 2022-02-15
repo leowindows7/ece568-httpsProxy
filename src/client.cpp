@@ -9,7 +9,9 @@
 
 #include "network.hpp"
 
-char * Client::connectToHost(std::string hostname, int port_num) {
+char * Client::connectToHost(std::string hostname,
+                             int port_num,
+                             std::string http_request) {
   Network * client_connect = cconnect.get();
   std::pair<int, struct addrinfo *> socketInfo =
       client_connect->connectSetup<int, struct addrinfo *>(hostname.c_str(), port_num);
@@ -23,7 +25,6 @@ char * Client::connectToHost(std::string hostname, int port_num) {
     throw std::exception();
   }
 
-  std::string http_request = "GET / HTTP/1.1\nHost:" + hostname + "\n\n";
   if (send(socket_fd, http_request.c_str(), http_request.size(), 0) == -1) {
     // TOOO: refactor to throw exception
     perror("send");

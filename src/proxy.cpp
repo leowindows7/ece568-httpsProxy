@@ -22,15 +22,16 @@ void Proxy::serverBoot(int socketfd) {
     std::map<std::string, std::string> headerMap = httpResMap(buf);
     std::string hostname = headerMap["Host"];
     int port = std::stoi(headerMap["Port"]);
-    dispatch_worker(hostname, port, client_connection_fd);
+    dispatch_worker(hostname, port, client_connection_fd, buf);
     // sendToHost(hostname, port, client_connection_fd);
   }
 }
 
-void sendToHost(std::string hostname, int port, int socketfd) {
+void sendToHost(std::string hostname, int port, int socketfd, std::string http_request) {
   Client c;
   char * recvbuf = NULL;
-  recvbuf = c.connectToHost(hostname, port);
+  //std::string http_request = "GET / HTTP/1.1\nHost:" + hostname + "\n\n";
+  recvbuf = c.connectToHost(hostname, port, http_request);
   std::cout << recvbuf << std::endl;
   if (send(socketfd, recvbuf, strlen(recvbuf), 0) == -1) {
     perror("send");
@@ -38,8 +39,12 @@ void sendToHost(std::string hostname, int port, int socketfd) {
   }
 }
 
-void Proxy::dispatch_worker(std::string hostname, int port, int socketfd) {
-  std::thread(sendToHost, hostname, port, socketfd).detach();
+void Proxy::dispatch_worker(std::string hostname,
+                            int port,
+                            int socketfd,
+                            std::string http_request) {
+  // std::cout << buf << std::endl;
+  std::thread(sendToHost, hostname, port, socketfd, http_request).detach();
 }
 
 int main(int argc, char ** argv) {

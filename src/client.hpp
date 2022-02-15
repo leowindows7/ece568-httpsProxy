@@ -10,6 +10,6 @@ class Client {
 
  public:
   Client() : cconnect(new Network) {}
-  char * connectToHost(std::string hostname, int port);
+  char * connectToHost(std::string hostname, int port, std::string request);
 };
 #endif
