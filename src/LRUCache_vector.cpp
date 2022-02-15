@@ -22,7 +22,9 @@ std::map<std::string, std::string> LRUCache::getResponse(std::string url_string)
     std::vector<std::string>::iterator it = std::find(url_vector.begin(), url_vector.end(), url_string);
     int index = it - url_vector.begin();
     if(it == url_vector.end()){
-        
+        std::cout<< "no such url" << std::endl;
+    } else {
+        std::cout << "url exist" << std::endl;
     }
 
     return res_Map_vector[index];
@@ -77,7 +79,7 @@ void LRUCache::display()
 }
 int main()
 {
-    LRUCache ca(2);
+    LRUCache ca(4);
     ca.getCapacity();
     std::map<std::string, std::string> response_Map;
     ca.put("try", response_Map);
@@ -88,5 +90,10 @@ int main()
     ca.display();
     ca.put("gaga", response_Map);
     ca.display();
+    ca.put("try", response_Map);
+    ca.display();
+    ca.getResponse("gaga");
+    ca.getResponse("ty");
+    ca.getResponse("tey");
     return 0;
 }
