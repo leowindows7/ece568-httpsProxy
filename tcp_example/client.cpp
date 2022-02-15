@@ -13,7 +13,7 @@ int main(int argc, char * argv[]) {
   struct addrinfo host_info;
   struct addrinfo * host_info_list;
   const char * hostname = argv[1];
-  const char * port = "4444";
+  const char * port = "80";
 
   if (argc < 2) {
     cout << "Syntax: client <hostname>\n" << endl;
@@ -49,10 +49,12 @@ int main(int argc, char * argv[]) {
     cerr << "  (" << hostname << "," << port << ")" << endl;
     return -1;
   }  //if
-
+  char buffer[512];
   const char * message = "hi there!";
-  send(socket_fd, message, strlen(message), 0);
-
+  std::string url = "GET / HTTP/1.1\nHost: www.youtube.com\n\n";
+  send(socket_fd, url.c_str(), strlen(url.c_str()), 0);
+  recv(socket_fd, buffer, sizeof(buffer), 0);
+  cout << buffer << endl;
   freeaddrinfo(host_info_list);
   close(socket_fd);
 

@@ -62,8 +62,9 @@ std::map<std::string, std::string> httpResMap(std::string response)
     }
     if(responseMap["Type"] == "Request"){
         if((pos = responseMap["Host"].find(":")) > 0){
+            std::string tmp = responseMap["Host"];
             responseMap["Host"] = responseMap["Host"].substr(0, pos);
-            responseMap.insert({"Port", responseMap["Host"].substr(pos + 1, responseMap["Host"].length())});
+            responseMap.insert({"Port", tmp.substr(pos + 1, responseMap["Host"].length())});
         } else {
             responseMap.insert({"Port", "-1"});
         }
