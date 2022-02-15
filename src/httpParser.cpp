@@ -35,7 +35,7 @@ std::map<std::string, std::string> httpResMap(std::string response) {
   // get header
   response.erase(0, pos + delimiter.length());
   std::string header = "";
-  while ((pos = response.find(delimiter)) != 1) {
+  while ((pos = response.find(delimiter)) != 1 && response.find(delimiter) != std::string::npos) {
     token = response.substr(0, pos);
     header += token + "\n";
     response.erase(0, pos + delimiter.length());
