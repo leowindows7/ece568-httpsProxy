@@ -10,7 +10,9 @@ class LRUCache
     int capacity;
     std::vector<std::string> url_vector{};
     std::vector<std::map<std::string, std::string>> res_Map_vector{};
-
+    //std::vector<pthread_mutex_t> lock_vector{};
+    pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+    //pthread_mutex_t lock;
 public:
     LRUCache(int);
     void put(std::string, std::map<std::string, std::string>);
@@ -47,30 +49,40 @@ void LRUCache::put(std::string url_string, std::map<std::string, std::string> re
 {
     std::vector<std::string>::iterator it = std::find(url_vector.begin(), url_vector.end(), url_string);
     int index = it - url_vector.begin();
+    //pthread_mutex_t lock;
     if (it == url_vector.end())
     {
         if (url_vector.size() < capacity)
         {
             std::cout << "cache not full" << std::endl;
+            pthread_mutex_lock(&lock);
+            //lock_vector.push_back(lock);
             url_vector.push_back(url_string);
             res_Map_vector.push_back(response_Map);
+            pthread_mutex_unlock(&lock);
         }
         else
         {
             std::cout << "cache full" << std::endl;
+            pthread_mutex_lock(&lock);
+            // lock_vector.push_back(lock);
+            // lock_vector.erase(lock_vector.begin());
             url_vector.erase(url_vector.begin());
             url_vector.push_back(url_string);
             res_Map_vector.erase(res_Map_vector.begin());
             res_Map_vector.push_back(response_Map);
+            pthread_mutex_unlock(&lock);
         }
     }
     else // url already exist
     {
         std::cout << *it << " already exist" << std::endl;
+        pthread_mutex_lock(&lock);
         url_vector.erase(it);
         res_Map_vector.erase(res_Map_vector.begin() + index);
         url_vector.push_back(url_string);
         res_Map_vector.push_back(response_Map);
+        pthread_mutex_unlock(&lock);
     }
 }
 void LRUCache::display()
