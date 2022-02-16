@@ -8,7 +8,12 @@
 #include <vector>
 
 #include "network.hpp"
-
+/** Connect to specified host
+ * @param hostname: hostname to connect
+ * @param port_num: port number
+ * @param http_request
+ * @return char * need to free by programmer
+ **/
 char * Client::connectToHost(std::string hostname,
                              int port_num,
                              std::string http_request) {
@@ -31,13 +36,22 @@ char * Client::connectToHost(std::string hostname,
     throw std::exception();
   }
 
-  char * recvbuffer = new char[65536];
-  if (recv(socket_fd, recvbuffer, sizeof(recvbuffer), 0) == -1) {
+  char recvbuffer = new char[65536];
+  int numbytes = 0;
+
+  if ((numbytes = recv(socket_fd, recvbuffer, 65536, 0)) == -1) {
     perror("recv");
     throw std::exception();
   }
 
-  // std::cout << recvbuffer << std::endl;
+  recvbuffer[numbytes] = '\0';
+
+  std::string s(recvbuffer);
+  if (s.find("\r\n") != std::string::npos) {
+    std::cout << "client recv: " << recvbuffer << std::endl;
+  }
+
+  std::cout << "client recv: " << recvbuffer << std::endl;
 
   return recvbuffer;
 }

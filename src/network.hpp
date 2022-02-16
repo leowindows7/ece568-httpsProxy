@@ -10,10 +10,12 @@
 #include <utility>
 
 class Network {
-  int socketfd;
   struct addrinfo * socketInfo;
+  int socketfd;
 
  public:
+  Network() : socketInfo(nullptr), socketfd(-1) {}
+
   template<typename T, typename U>
   std::pair<T, U> connectSetup(const char * hostName, int port_num) {
     struct addrinfo hints;
@@ -27,7 +29,7 @@ class Network {
     if ((status = getaddrinfo(
              hostName, std::to_string(port_num).c_str(), &hints, &socketInfo)) != 0) {
       // TODO: throw exception
-      fprintf(stderr, "Error: getaddrinfo error\n");
+      fprintf(stderr, "Error: getaddrinfo error %s\n", gai_strerror(status));
       exit(EXIT_FAILURE);
     }
 
@@ -44,14 +46,17 @@ class Network {
     return connectInfo;
   }
 
-  Network() : socketfd(-1), socketInfo(nullptr) {}
-
   ~Network() {
-    freeaddrinfo(socketInfo);
-    if (close(socketfd) == -1) {
-      // TODO: throw exception
-      perror("close");
-      exit(EXIT_FAILURE);
+    if (socketInfo != nullptr) {
+      freeaddrinfo(socketInfo);
+    }
+
+    if (socketfd != -1) {
+      if (close(socketfd) == -1) {
+        // TODO: throw exception
+        perror("~Network() close");
+        exit(EXIT_FAILURE);
+      }
     }
   }
 };

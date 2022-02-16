@@ -2,6 +2,7 @@
 #define CLIENT_HPP
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "network.hpp"
 

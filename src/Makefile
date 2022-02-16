@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -pedantic --std=c++11 -Wall -Werror -Wextra -g
+CXXFLAGS = -pedantic --std=c++11 -g
 TARGETS = client server proxy
 CLIENT_OBJS = client.o
 SERVER_OBJS = server.o

@@ -14,14 +14,15 @@ int Proxy::proxyServerSetup(int port) {
 }
 
 void Proxy::serverBoot(int socketfd) {
+  HttpParser httpParser;
   while (1) {
     int client_connection_fd = acceptRequest(socketfd);
     std::string buf = processRequest(client_connection_fd);
-    std::cout << "In Proxy:" << std::endl << buf << std::endl;
-    // TODO: refactor this to use http parser
-    std::map<std::string, std::string> headerMap = httpResMap(buf);
+    std::cout << "In Proxy:" << std::endl << buf << std::endl;  // TODO: remove this
+    std::map<std::string, std::string> headerMap = httpParser.httpResMap(buf);
     std::string hostname = headerMap["Host"];
-    int port = std::stoi(headerMap["Port"]);
+    int port = (std::stoi(headerMap["Port"]) == -1) ? 80 : std::stoi(headerMap["Port"]);
+    std::string method = headerMap["Method"];
     dispatch_worker(hostname, port, client_connection_fd, buf);
     // sendToHost(hostname, port, client_connection_fd);
   }
@@ -29,14 +30,21 @@ void Proxy::serverBoot(int socketfd) {
 
 void sendToHost(std::string hostname, int port, int socketfd, std::string http_request) {
   Client c;
-  char * recvbuf = NULL;
-  //std::string http_request = "GET / HTTP/1.1\nHost:" + hostname + "\n\n";
+  char * recvbuf = nullptr;
   recvbuf = c.connectToHost(hostname, port, http_request);
   std::cout << recvbuf << std::endl;
-  if (send(socketfd, recvbuf, strlen(recvbuf), 0) == -1) {
+
+  /*
+  HttpParser httpParser;
+  std::string recvbuf = httpParser.send200OK();
+  if (send(socketfd, recvbuf.c_str(), strlen(recvbuf.c_str()), 0) == -1) {
     perror("send");
     exit(EXIT_FAILURE);
   }
+  */
+
+  // std::string recvBuf = processRequest(socketfd);
+  // std::cout << "client mesg " << recvBuf << std::endl;
 }
 
 void Proxy::dispatch_worker(std::string hostname,

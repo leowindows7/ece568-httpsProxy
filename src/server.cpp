@@ -84,7 +84,7 @@ int Server::acceptRequest(int socket_fd) {
   return client_connection_fd;
 }
 
-std::string Server::processRequest(int connection_fd) {
+std::string processRequest(int connection_fd) {
   char buf[512] = {0};
   int num_bytes = 0;
   if ((num_bytes = recv(connection_fd, buf, sizeof(buf), 0)) == -1) {

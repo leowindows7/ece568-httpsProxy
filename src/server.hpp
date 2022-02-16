@@ -19,6 +19,7 @@ class Server {
   int setupServer(const int port_num);
   void serverBoot(int socket_fd);
   int acceptRequest(int socket_fd);
-  std::string processRequest(int connection_fd);
 };
+
+std::string processRequest(int connection_fd);
 #endif
