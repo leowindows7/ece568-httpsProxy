@@ -35,34 +35,21 @@ std::string Client::connectToHost(std::string hostname,
 
   Network::sendRequest(socket_fd, http_request.c_str(), http_request.size());
 
-  int numbytes = 0;
-  std::string s = Network::recvRequest(socket_fd);
-  std::cout << "numbytes " << numbytes << std::endl << s.size() << std::endl;
-
-  return s;
-}
-
-void assembleHeaderBody(char * recvbuffer, int numbytes, int socket_fd) {
-  HttpParser parser;
-  std::map<std::string, std::string> hashMap = parser.httpResMap(recvbuffer);
-  int bodyExpectedLength = std::stoi(hashMap["Content-Length"]);
-  // means https response
-  std::string s(recvbuffer);
-  size_t pos = 0;
-  std::string body;
-  if ((pos = s.find("\r\n\r\n")) != std::string::npos) {
-    // get current body
-    char * bodyStart = recvbuffer + pos + strlen("\r\n\r\n");
-    int bodyBytes = numbytes;
-    body += bodyStart;
-    while (bodyBytes < bodyExpectedLength) {
-      if ((numbytes = recv(socket_fd, recvbuffer, MAX_MSG_LENGTH, 0)) == -1) {
-        perror("recv");
-        throw std::exception();
-      }
-      recvbuffer[numbytes] = '\0';
-      bodyBytes += numbytes;
-      body += recvbuffer;
-    }
+  std::string response = Network::recvRequest(socket_fd);
+  int contentLength = -1;
+  std::string validResponse = response;
+  // find the end of header
+  while (validResponse.find("\r\n\r\n") == std::string::npos) {
+    std::string tmp = Network::recvRequest(socket_fd);
+    validResponse.append(tmp);
   }
+  // extract content length
+  while ((contentLength = Network::findContentLength(validResponse)) == -1) {
+  }
+
+  // start to parse data
+  Network::assembleValidResponse(socket_fd, validResponse, contentLength);
+  std::cout << validResponse << std::endl << validResponse.size() << std::endl;
+
+  return validResponse;
 }

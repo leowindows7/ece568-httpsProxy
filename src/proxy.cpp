@@ -38,18 +38,29 @@ void handleGetRequest(std::string hostname,
 
 void handleNewTab(int client_connection_fd) {
   while (1) {
+    // get header from client
     std::string http_request = Network::recvRequest(client_connection_fd);
     std::cout << "Request Header:" << std::endl
               << http_request << std::endl;  // TODO: remove this
+
+    // parse header
     HttpParser httpParser;
     std::map<std::string, std::string> headerMap = httpParser.httpResMap(http_request);
     std::string hostname = headerMap["Host"];
-    int port = (std::stoi(headerMap["Port"]) == -1) ? 80 : std::stoi(headerMap["Port"]);
+    int port = (headerMap["Port"] == "-1" || headerMap["Port"] == "")
+                   ? 80
+                   : std::stoi(headerMap["Port"]);
     std::string method = headerMap["Method"];
     std::cout << method << std::endl;
-    // if (method == "GET") {
-    handleGetRequest(hostname, port, client_connection_fd, http_request);
-    // }
+
+    // handle action
+    if (method.find("GET") != std::string::npos) {
+      handleGetRequest(hostname, port, client_connection_fd, http_request);
+    }
+
+    else if (method.find("CONNECT") != std::string::npos) {
+      handleConnectRequest();
+    }
   }
 }
 
@@ -58,7 +69,7 @@ void Proxy::dispatch_worker(int socketfd) {
   std::thread(handleNewTab, socketfd).detach();
 }
 // TODO: function unfinished
-/*
+
 void handlConnectRequest() {
   HttpParser httpParser;
   std::string recvbuf = httpParser.send200OK();
@@ -70,7 +81,6 @@ void handlConnectRequest() {
   std::string recvBuf = processRequest(socketfd);
   std::cout << "client mesg " << recvBuf << std::endl;
 }
-*/
 
 int main(int argc, char ** argv) {
   std::vector<std::string> opts = {"port"};

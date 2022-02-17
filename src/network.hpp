@@ -7,7 +7,10 @@
 #include <unistd.h>
 
 #include <cstring>
+#include <string>
 #include <utility>
+
+#include "httpParser.hpp"
 
 #define MAX_MSG_LENGTH 65536
 class Network {
@@ -64,6 +67,29 @@ class Network {
     buf[num_bytes] = '\0';
 
     return std::string(buf);
+  }
+
+  static int findContentLength(std::string s) {
+    if (s.find("Content-Length") == std::string::npos) {
+      return -1;
+    }
+
+    HttpParser parser;
+    std::map<std::string, std::string> parsedHeader = parser.httpResMap(s);
+    return std::stoi(parsedHeader["Content-Length"]);
+  }
+
+  static void assembleValidResponse(int socketfd,
+                                    std::string & response,
+                                    int contentLength) {
+    if (response.find("\r\n\r\n") == std::string::npos) {
+      throw std::exception();  // invalid input
+    }
+
+    while (response.size() < contentLength) {
+      std::string tmp = recvRequest(socketfd);
+      response.append(tmp);
+    }
   }
 
   ~Network() {
