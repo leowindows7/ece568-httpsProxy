@@ -46,7 +46,7 @@ void handleNewTab(int client_connection_fd) {
     // parse header
     HttpParser httpParser;
     std::map<std::string, std::string> headerMap = httpParser.httpResMap(http_request);
-    std::string hostname = headerMap["Host"];
+    std::string hostname = headerMap["host"];
     int port = (headerMap["Port"] == "-1" || headerMap["Port"] == "")
                    ? 80
                    : std::stoi(headerMap["Port"]);

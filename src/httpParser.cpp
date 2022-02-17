@@ -58,22 +58,22 @@ std::map<std::string, std::string> HttpParser::httpResMap(std::string response) 
   }
 
   if (responseMap["Type"] == "Request") {
-    if ((pos = responseMap["Host"].find(":")) != std::string::npos) {
-      std::string tmp = responseMap["Host"];
-      responseMap["Host"] = responseMap["Host"].substr(0, pos);
-      responseMap.insert({"Port", tmp.substr(pos + 1, responseMap["Host"].length())});
+    if ((pos = responseMap["host"].find(":")) != std::string::npos) {
+      std::string tmp = responseMap["host"];
+      responseMap["host"] = responseMap["host"].substr(0, pos);
+      responseMap.insert({"Port", tmp.substr(pos + 1, responseMap["host"].length())});
     }
     else {
       responseMap.insert({"Port", "-1"});
     }
   }
-  if ((pos = responseMap["Host"].find("\r")) != std::string::npos) {
-    responseMap["Host"] = responseMap["Host"].substr(0, pos);
+  if ((pos = responseMap["host"].find("\r")) != std::string::npos) {
+    responseMap["host"] = responseMap["host"].substr(0, pos);
   }
   return responseMap;
 }
 
-void stringToLower(std::string s) {
+void stringToLower(std::string & s) {
   for (auto iter = s.begin(); iter != s.end(); iter++) {
     *iter = std::tolower(*iter);
   }

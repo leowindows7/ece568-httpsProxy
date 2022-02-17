@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-void stringToLower(std::string s);
+void stringToLower(std::string & s);
 
 class HttpParser {
  public:

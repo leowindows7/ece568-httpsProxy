@@ -37,15 +37,20 @@ std::string Client::connectToHost(std::string hostname,
 
   std::string response = Network::recvRequest(socket_fd);
   std::cout << response << std::endl;
-  int contentLength = -1;
   std::string validResponse = response;
   // find the end of header
   while (validResponse.find("\r\n\r\n") == std::string::npos) {
     std::string tmp = Network::recvRequest(socket_fd);
     validResponse.append(tmp);
   }
-  // extract content length
-  while ((contentLength = Network::findContentLength(validResponse)) == -1) {
+
+  HttpParser parser;
+  std::map<std::string, std::string> parsed = parser.httpResMap(validResponse);
+  int contentLength = (parsed.find("content-length") != parsed.end())
+                          ? std::stoi(parsed["content-length"])
+                          : -1;
+  if (contentLength == -1) {
+    throw std::exception();
   }
 
   // start to parse data
