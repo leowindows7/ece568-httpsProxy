@@ -9,6 +9,7 @@
 #include <cstring>
 #include <utility>
 
+#define MAX_MSG_LENGTH 65536
 class Network {
   struct addrinfo * socketInfo;
   int socketfd;
@@ -44,6 +45,25 @@ class Network {
 
     std::pair<T, U> connectInfo(socketfd, socketInfo);
     return connectInfo;
+  }
+
+  static void sendRequest(int client_connection_fd, const void * msg, const size_t size) {
+    if (send(client_connection_fd, msg, size, 0) == -1) {
+      perror("send");
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  static std::string recvRequest(int connection_fd) {
+    char buf[MAX_MSG_LENGTH] = {0};
+    int num_bytes = 0;
+    if ((num_bytes = recv(connection_fd, buf, sizeof(buf), 0)) == -1) {
+      perror("recv");
+      exit(EXIT_FAILURE);
+    }
+    buf[num_bytes] = '\0';
+
+    return std::string(buf);
   }
 
   ~Network() {

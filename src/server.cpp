@@ -58,15 +58,8 @@ void Server::serverBoot(int socket_fd) {
     // accept
     int client_connection_fd = acceptRequest(socket_fd);
     // receive message
-    std::string buf = processRequest(client_connection_fd);
-    std::cout << buf << std::endl;
-
-    // send response
-    char msg[] = "greeting from server\n";
-    if (send(client_connection_fd, msg, strlen(msg), 0) == -1) {
-      perror("send");
-      exit(EXIT_FAILURE);
-    }
+    std::string buf = Network::recvRequest(client_connection_fd);
+    Network::sendRequest(client_connection_fd, buf.c_str(), buf.size());
   }
 }
 
@@ -82,18 +75,6 @@ int Server::acceptRequest(int socket_fd) {
   }
 
   return client_connection_fd;
-}
-
-std::string processRequest(int connection_fd) {
-  char buf[512] = {0};
-  int num_bytes = 0;
-  if ((num_bytes = recv(connection_fd, buf, sizeof(buf), 0)) == -1) {
-    perror("recv");
-    exit(EXIT_FAILURE);
-  }
-  buf[num_bytes] = '\0';
-
-  return std::string(buf);
 }
 
 /** 
