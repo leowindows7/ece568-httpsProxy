@@ -12,7 +12,7 @@
 
 #include "httpParser.hpp"
 
-#define MAX_MSG_LENGTH 65536
+#define MAX_MSG_LENGTH 700000
 class Network {
   struct addrinfo * socketInfo;
   int socketfd;
@@ -70,13 +70,13 @@ class Network {
   }
 
   static int findContentLength(std::string s) {
-    if (s.find("Content-Length") == std::string::npos) {
+    if (s.find("content-length") == std::string::npos) {
       return -1;
     }
 
     HttpParser parser;
     std::map<std::string, std::string> parsedHeader = parser.httpResMap(s);
-    return std::stoi(parsedHeader["Content-Length"]);
+    return std::stoi(parsedHeader["content-length"]);
   }
 
   static void assembleValidResponse(int socketfd,

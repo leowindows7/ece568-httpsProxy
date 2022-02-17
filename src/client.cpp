@@ -36,6 +36,7 @@ std::string Client::connectToHost(std::string hostname,
   Network::sendRequest(socket_fd, http_request.c_str(), http_request.size());
 
   std::string response = Network::recvRequest(socket_fd);
+  std::cout << response << std::endl;
   int contentLength = -1;
   std::string validResponse = response;
   // find the end of header

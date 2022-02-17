@@ -59,7 +59,7 @@ void handleNewTab(int client_connection_fd) {
     }
 
     else if (method.find("CONNECT") != std::string::npos) {
-      handleConnectRequest();
+      // handleConnectRequest();
     }
   }
 }
@@ -69,7 +69,7 @@ void Proxy::dispatch_worker(int socketfd) {
   std::thread(handleNewTab, socketfd).detach();
 }
 // TODO: function unfinished
-
+/*
 void handlConnectRequest() {
   HttpParser httpParser;
   std::string recvbuf = httpParser.send200OK();
@@ -81,6 +81,7 @@ void handlConnectRequest() {
   std::string recvBuf = processRequest(socketfd);
   std::cout << "client mesg " << recvBuf << std::endl;
 }
+*/
 
 int main(int argc, char ** argv) {
   std::vector<std::string> opts = {"port"};

@@ -53,6 +53,7 @@ std::map<std::string, std::string> HttpParser::httpResMap(std::string response) 
     tokenValue = header.substr(1, pos - 1);
     // cout << tokenValue << endl;
     header.erase(0, pos + delimiter.length());
+    stringToLower(tokenKey);
     responseMap.insert({tokenKey, tokenValue});
   }
 
@@ -70,4 +71,10 @@ std::map<std::string, std::string> HttpParser::httpResMap(std::string response) 
     responseMap["Host"] = responseMap["Host"].substr(0, pos);
   }
   return responseMap;
+}
+
+void stringToLower(std::string s) {
+  for (auto iter = s.begin(); iter != s.end(); iter++) {
+    *iter = std::tolower(*iter);
+  }
 }

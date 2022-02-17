@@ -9,7 +9,10 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <string>
 #include <vector>
+
+void stringToLower(std::string s);
 
 class HttpParser {
  public:
