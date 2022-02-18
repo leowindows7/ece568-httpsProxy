@@ -51,9 +51,15 @@ class Network {
   }
 
   static void sendRequest(int client_connection_fd, const void * msg, const size_t size) {
-    if (send(client_connection_fd, msg, size, 0) == -1) {
-      perror("send");
-      exit(EXIT_FAILURE);
+    int num_bytes = 0;
+    int recv_bytes = 0;
+    while ((num_bytes < size)) {
+      if ((recv_bytes = send(client_connection_fd, msg, size, 0)) == -1) {
+        perror("send");
+        exit(EXIT_FAILURE);
+      }
+
+      num_bytes += recv_bytes;
     }
   }
 

@@ -11,6 +11,10 @@ class Client {
 
  public:
   Client() : cconnect(new Network) {}
-  std::string connectToHost(std::string hostname, int port, std::string request);
+  int setUpSocket(std::string hostname, int port_num);
+  std::string connectToHost(std::string hostname,
+                            int port,
+                            std::string request,
+                            int socket_fd);
 };
 #endif
