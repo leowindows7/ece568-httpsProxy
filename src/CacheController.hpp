@@ -10,12 +10,14 @@
 class CacheController
 {
     LRUCache myCahe;
-
 public:
+    
     bool toRevalidate(std::string);
     bool checkCacheControl(std::string);
     bool checkPragma(std::string);
     bool checkVary(std::string);
+    int checkMaxage(std::string);
+    CacheController(LRUCache);
     std::string controlParser();
 };
 
