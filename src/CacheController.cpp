@@ -29,7 +29,8 @@ bool CacheController::toRevalidate(std::string url_string)
     {
         vary_str = responseMap.find("vary")->second;
     }
-    if(responseMap.find("etag") != responseMap.end()){
+    if(responseMap.find("etag") != responseMap.end())
+    {
         return true;
     }
 
