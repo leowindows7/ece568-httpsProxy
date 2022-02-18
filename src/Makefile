@@ -5,7 +5,7 @@ CLIENT_OBJS = client.o
 SERVER_OBJS = server.o
 PROXY_OBJS = proxy.o httpParser.o
 CACHE_OBJS = LRUCache.o
-CCONTROL_OBJS = CacheController.o LRUCache.o
+CCONTROL_OBJS = CacheController.o LRUCache.o TimeMaker.o
 
 all: $(TARGETS)
 proxy: $(SERVER_OBJS) $(CLIENT_OBJS) $(PROXY_OBJS) 

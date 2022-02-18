@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include "CacheController.hpp"
+#include "TimeMaker.hpp"
 #include <fstream>
 #include <string>
 int main()
@@ -33,8 +34,10 @@ int main()
         } else {
             std::cout << "no need" << std::endl;
         }
-        std::cout << myController.checkMaxage("max-age=7200") << std::endl;
+        //std::cout << myController.getMaxage("max-age=7200") << std::endl;
     }
-    
+    TimeMaker tm;
+    //std::cout << tm.getTimeInSec("Fri, 18 Feb 2022 15:11:01")<< std::endl;
+    std::cout << myController.checkExpires("Fri, 18 Feb 2022 15:11:01") << std::endl;
     return 0;
 }

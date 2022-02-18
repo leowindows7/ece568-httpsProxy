@@ -16,7 +16,8 @@ public:
     bool checkCacheControl(std::string);
     bool checkPragma(std::string);
     bool checkVary(std::string);
-    int checkMaxage(std::string);
+    int getMaxage(std::string);
+    bool checkExpires(std::string);
     CacheController(LRUCache);
     std::string controlParser();
 };
