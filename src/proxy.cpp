@@ -50,9 +50,20 @@ void handleNewTab(int client_connection_fd) {
     }
 
     else if (method.find("POST") != std::string::npos) {
-      handleGetRequest(hostname, port, client_connection_fd, http_request);
+      handlePostRequest(hostname, port, client_connection_fd, http_request);
     }
   }
+}
+
+void handlePostRequest(std::string hostname,
+                       int port,
+                       int client_fd,
+                       std::string http_request) {
+  Client c;
+  std::string recvbuf;
+  int server_fd = c.setUpSocket(hostname, port);
+  recvbuf = c.connectToHost(hostname, port, http_request, server_fd);
+  Network::sendRequest(client_fd, recvbuf.c_str(), recvbuf.size());
 }
 
 void handleGetRequest(std::string hostname,

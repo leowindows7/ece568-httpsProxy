@@ -18,7 +18,10 @@ void handleConnectRequest(std::string hostname,
                           std::string http_request);
 // TODO: move this to Network class
 void setupConnectIO(struct pollfd pfds[], int client_fd, int server_fd);
-
+void handlePostRequest(std::string hostname,
+                       int port,
+                       int client_fd,
+                       std::string http_request);
 void handleNewTab(int client_connection_fd);
 
 class Proxy : public Server {
