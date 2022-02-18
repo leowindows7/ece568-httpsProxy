@@ -15,6 +15,10 @@
 void stringToLower(std::string & s);
 
 class HttpParser {
+  int getRequestType(std::string & response,
+                     std::map<std::string, std::string> & responseMap);
+  int getHeader(std::string & response, std::map<std::string, std::string> & responseMap);
+
  public:
   std::map<std::string, std::string> httpResMap(std::string header);
   std::string send200OK();

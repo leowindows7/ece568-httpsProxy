@@ -55,6 +55,36 @@ void handleNewTab(int client_connection_fd) {
   }
 }
 
+void handleConnectRequest(std::string hostname,
+                          int port,
+                          int client_fd,
+                          std::string http_request) {
+  // setup connection with server
+  Client c;
+  int server_fd = c.setUpSocket(hostname, port);
+  // send back 200 ok with client
+  HttpParser httpParser;
+  std::string responseOk = httpParser.send200OK();
+  Network::sendRequest(client_fd, responseOk.c_str(), responseOk.size());
+
+  // setup IO mux
+  struct pollfd pfds[2];  // only client and server
+  int fd_size = 2;
+  setupConnectIO(pfds, client_fd, server_fd);
+  // Use Poll IO to listen to socket that is ready for recving response
+  while (1) {
+    int poll_count = poll(pfds, fd_size, -1);
+    std::string recvBuf;
+    for (int i = 0; i < fd_size; i++) {
+      if (pfds[i].revents & POLLIN) {
+        recvBuf = Network::recvRequest(pfds[i].fd);
+        int sendIndex = fd_size - i - 1;
+        Network::sendRequest(pfds[sendIndex].fd, recvBuf.c_str(), recvBuf.size());
+      }
+    }
+  }
+}
+
 void handlePostRequest(std::string hostname,
                        int port,
                        int client_fd,
@@ -85,40 +115,6 @@ void handleGetRequest(std::string hostname,
 void Proxy::dispatch_worker(int socketfd) {
   // std::cout << buf << std::endl;
   std::thread(handleNewTab, socketfd).detach();
-}
-
-// TODO: move this to network class
-void handleConnectRequest(std::string hostname,
-                          int port,
-                          int client_fd,
-                          std::string http_request) {
-  // setup connection with server
-  Client c;
-  int server_fd = c.setUpSocket(hostname, port);
-  // send back 200 ok with client
-  HttpParser httpParser;
-  std::string responseOk = httpParser.send200OK();
-  Network::sendRequest(client_fd, responseOk.c_str(), responseOk.size());
-
-  // setup IO mux
-  struct pollfd pfds[2];  // only client and server
-  int fd_size = 2;
-  setupConnectIO(pfds, client_fd, server_fd);
-  for (int i = 0; i < 2; i++) {
-    std::cout << pfds[i].fd << std::endl;
-  }
-  // Use Poll IO to listen to socket that is ready for recving response
-  while (1) {
-    int poll_count = poll(pfds, fd_size, -1);
-    std::string recvBuf;
-    for (int i = 0; i < fd_size; i++) {
-      if (pfds[i].revents & POLLIN) {
-        recvBuf = Network::recvRequest(pfds[i].fd);
-        int sendIndex = fd_size - i - 1;
-        Network::sendRequest(pfds[sendIndex].fd, recvBuf.c_str(), recvBuf.size());
-      }
-    }
-  }
 }
 
 // TODO: move this to Network class
