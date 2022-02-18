@@ -4,6 +4,7 @@ TARGETS = proxy
 CLIENT_OBJS = client.o
 SERVER_OBJS = server.o
 PROXY_OBJS = proxy.o httpParser.o
+CACHE_OBJS = LRUCache.o
 
 all: $(TARGETS)
 proxy: $(SERVER_OBJS) $(CLIENT_OBJS) $(PROXY_OBJS) 
@@ -11,8 +12,11 @@ proxy: $(SERVER_OBJS) $(CLIENT_OBJS) $(PROXY_OBJS)
 
 httpParser: $(HTTP_OBJS) httpParser.cpp httpParser.hpp
 
-%.o: %.c
-	$(CXX) $(CXXFLAGS) -c $< -lpthread
+LRUCache: $(CACHE_OBJS) LRUCache_test.cpp
+	$(CXX) -o $@ $(CXXFLAGS) $(CACHE_OBJS) LRUCache_test.cpp
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $<
 
 .PHONY: clean
 clean:
