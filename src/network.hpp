@@ -75,6 +75,16 @@ class Network {
     return std::string(buf);
   }
 
+  static int recvConnectRequest(int connection_fd, char * recvBuf) {
+    int num_bytes = 0;
+    if ((num_bytes = recv(connection_fd, recvBuf, MAX_MSG_LENGTH, 0)) == -1) {
+      perror("recv");
+      exit(EXIT_FAILURE);
+    }
+    recvBuf[num_bytes] = '\0';
+    return num_bytes;
+  }
+
   static int findContentLength(std::string s) {
     if (s.find("content-length") == std::string::npos) {
       return -1;

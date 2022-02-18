@@ -5,12 +5,16 @@ std::string HttpParser::send200OK() {
   return okString;
 }
 
-std::map<std::string, std::string> HttpParser::httpResMap(std::string response) {
-  std::map<std::string, std::string> responseMap;
+/** 
+ * get type of the request
+ * @param response: http request or http response
+ * @return 0 for success
+ **/
+int HttpParser::getRequestType(std::string & response,
+                               std::map<std::string, std::string> & responseMap) {
   size_t pos = 0;
-  std::string delimiter = "\n";
-  std::string token;
   std::string firstLine;
+  std::string delimiter = "\r\n";
   response.find_first_not_of(delimiter);
   pos = response.find(delimiter);
   // find first line to check if it's response or request
@@ -29,33 +33,45 @@ std::map<std::string, std::string> HttpParser::httpResMap(std::string response) 
     responseMap.insert({"Method", firstLine.substr(0, firstLine_pos + 1)});
   }
 
-  // get header
   response.erase(0, pos + delimiter.length());
-  std::string header = "";
-  while ((pos = response.find(delimiter)) != 1 &&
-         response.find(delimiter) != std::string::npos) {
-    token = response.substr(0, pos);
-    header += token + "\n";
-    response.erase(0, pos + delimiter.length());
-  }
-  response.erase(0, pos + delimiter.length());
-  // body
-  responseMap.insert({"Body", response});
-  // parse header, each attribute before : will be used as key
+
+  return 0;
+}
+
+int HttpParser::getHeader(std::string & response,
+                          std::map<std::string, std::string> & responseMap) {
+  int pos = response.find("\r\n\r\n");
+  std::string header = response.substr(0, pos);
+  response.erase(0, pos);
+
   std::string headerDeli = ":";
-  std::string tokenKey;
-  std::string tokenValue;
+  std::string delimiter = "\n";
   while ((pos = header.find(headerDeli)) != std::string::npos) {
-    tokenKey = header.substr(0, pos);
+    std::string tokenKey = header.substr(0, pos);
     // cout << tokenKey << endl;
     header.erase(0, pos + headerDeli.length());
     pos = header.find(delimiter);
-    tokenValue = header.substr(1, pos - 1);
+    std::string tokenValue = header.substr(1, pos - 1);
     // cout << tokenValue << endl;
     header.erase(0, pos + delimiter.length());
     stringToLower(tokenKey);
     responseMap.insert({tokenKey, tokenValue});
   }
+
+  return 0;
+}
+
+/**
+ * Turn the string of http request or repsone to key-value pair map
+**/
+std::map<std::string, std::string> HttpParser::httpResMap(std::string response) {
+  std::map<std::string, std::string> responseMap;
+
+  int pos = getRequestType(response, responseMap);
+  getHeader(response, responseMap);
+  // body
+  responseMap.insert({"Body", response});
+  // parse header, each attribute before : will be used as key
 
   if (responseMap["Type"] == "Request") {
     if ((pos = responseMap["host"].find(":")) != std::string::npos) {
