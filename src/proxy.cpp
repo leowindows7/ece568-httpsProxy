@@ -19,6 +19,7 @@ int Proxy::proxyServerSetup(int port) {
 void Proxy::serverBoot(int socketfd) {
   while (1) {
     int client_connection_fd = acceptRequest(socketfd);
+    // handleNewTab(client_connection_fd);
     dispatch_worker(client_connection_fd);
   }
 }
@@ -45,8 +46,7 @@ void handleNewTab(int client_connection_fd) {
     }
 
     else if (method.find("CONNECT") != std::string::npos) {
-      // handleConnectRequest(hostname, port, client_connection_fd, http_request);
-      std::cout << "Fuck you" << std::endl;
+      handleConnectRequest(hostname, port, client_connection_fd, http_request);
     }
 
     else if (method.find("POST") != std::string::npos) {
@@ -65,7 +65,7 @@ void handleConnectRequest(std::string hostname,
   // send back 200 ok with client
   HttpParser httpParser;
   std::string responseOk = httpParser.send200OK();
-  Network::sendRequest(client_fd, responseOk.c_str(), responseOk.size());
+  Network::sendRequest(client_fd, "HTTP/1.1 200 OK\r\n\r\n", 19);
 
   // setup IO mux
   struct pollfd pfds[2];  // only client and server
@@ -74,12 +74,17 @@ void handleConnectRequest(std::string hostname,
   // Use Poll IO to listen to socket that is ready for recving response
   while (1) {
     int poll_count = poll(pfds, fd_size, -1);
-    std::string recvBuf;
+    char recvBuf[MAX_MSG_LENGTH];
     for (int i = 0; i < fd_size; i++) {
       if (pfds[i].revents & POLLIN) {
-        recvBuf = Network::recvRequest(pfds[i].fd);
+        int num_bytes = 0;
+        if ((num_bytes = recv(pfds[i].fd, recvBuf, sizeof(recvBuf), 0)) == -1) {
+          perror("recv");
+          exit(EXIT_FAILURE);
+        }
+        recvBuf[num_bytes] = '\0';
         int sendIndex = fd_size - i - 1;
-        Network::sendRequest(pfds[sendIndex].fd, recvBuf.c_str(), recvBuf.size());
+        Network::sendRequest(pfds[sendIndex].fd, recvBuf, num_bytes);
       }
     }
   }

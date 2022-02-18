@@ -14,7 +14,7 @@ int HttpParser::getRequestType(std::string & response,
                                std::map<std::string, std::string> & responseMap) {
   size_t pos = 0;
   std::string firstLine;
-  std::string delimiter = "\n";
+  std::string delimiter = "\r\n";
   response.find_first_not_of(delimiter);
   pos = response.find(delimiter);
   // find first line to check if it's response or request
