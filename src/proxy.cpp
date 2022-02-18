@@ -23,23 +23,6 @@ void Proxy::serverBoot(int socketfd) {
   }
 }
 
-// TODO: move this to network class
-void handleGetRequest(std::string hostname,
-                      int port,
-                      int client_fd,
-                      std::string http_request) {
-  Client c;
-  std::string recvbuf;
-  int server_fd = c.setUpSocket(hostname, port);
-  recvbuf = c.connectToHost(hostname, port, http_request, server_fd);
-
-  if (send(client_fd, recvbuf.c_str(), recvbuf.size(), 0) == -1) {
-    // TOOO: refactor to throw exception
-    perror("send");
-    throw std::exception();
-  }
-}
-
 void handleNewTab(int client_connection_fd) {
   while (1) {
     // get header from client
@@ -65,6 +48,26 @@ void handleNewTab(int client_connection_fd) {
       // handleConnectRequest(hostname, port, client_connection_fd, http_request);
       std::cout << "Fuck you" << std::endl;
     }
+
+    else if (method.find("POST") != std::string::npos) {
+      handleGetRequest(hostname, port, client_connection_fd, http_request);
+    }
+  }
+}
+
+void handleGetRequest(std::string hostname,
+                      int port,
+                      int client_fd,
+                      std::string http_request) {
+  Client c;
+  std::string recvbuf;
+  int server_fd = c.setUpSocket(hostname, port);
+  recvbuf = c.connectToHost(hostname, port, http_request, server_fd);
+
+  if (send(client_fd, recvbuf.c_str(), recvbuf.size(), 0) == -1) {
+    // TOOO: refactor to throw exception
+    perror("send");
+    throw std::exception();
   }
 }
 
