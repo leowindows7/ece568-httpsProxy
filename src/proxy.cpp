@@ -74,15 +74,10 @@ void handleConnectRequest(std::string hostname,
   // Use Poll IO to listen to socket that is ready for recving response
   while (1) {
     int poll_count = poll(pfds, fd_size, -1);
-    char recvBuf[MAX_MSG_LENGTH];
     for (int i = 0; i < fd_size; i++) {
       if (pfds[i].revents & POLLIN) {
-        int num_bytes = 0;
-        if ((num_bytes = recv(pfds[i].fd, recvBuf, sizeof(recvBuf), 0)) == -1) {
-          perror("recv");
-          exit(EXIT_FAILURE);
-        }
-        recvBuf[num_bytes] = '\0';
+        char recvBuf[MAX_MSG_LENGTH] = {0};
+        int num_bytes = Network::recvConnectRequest(pfds[i].fd, recvBuf);
         int sendIndex = fd_size - i - 1;
         Network::sendRequest(pfds[sendIndex].fd, recvBuf, num_bytes);
       }
