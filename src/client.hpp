@@ -2,6 +2,7 @@
 #define CLIENT_HPP
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "network.hpp"
 
@@ -10,6 +11,6 @@ class Client {
 
  public:
   Client() : cconnect(new Network) {}
-  char * connectToHost(std::string hostname, int port);
+  std::string connectToHost(std::string hostname, int port, std::string request);
 };
 #endif

@@ -3,13 +3,23 @@
 #include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "httpParser.hpp"
 #include "network.hpp"
 
-char * Client::connectToHost(std::string hostname, int port_num) {
+/** Connect to specified host
+ * @param hostname: hostname to connect
+ * @param port_num: port number
+ * @param http_request
+ * @return char * need to free by programmer
+ **/
+std::string Client::connectToHost(std::string hostname,
+                                  int port_num,
+                                  std::string http_request) {
   Network * client_connect = cconnect.get();
   std::pair<int, struct addrinfo *> socketInfo =
       client_connect->connectSetup<int, struct addrinfo *>(hostname.c_str(), port_num);
@@ -23,21 +33,29 @@ char * Client::connectToHost(std::string hostname, int port_num) {
     throw std::exception();
   }
 
-  std::string http_request =
-      "GET / HTTP/1.1\nHost:" + hostname + "\nConnection: close\n\n";
-  if (send(socket_fd, http_request.c_str(), http_request.size(), 0) == -1) {
-    // TOOO: refactor to throw exception
-    perror("send");
+  Network::sendRequest(socket_fd, http_request.c_str(), http_request.size());
+
+  std::string response = Network::recvRequest(socket_fd);
+  std::cout << response << std::endl;
+  std::string validResponse = response;
+  // find the end of header
+  while (validResponse.find("\r\n\r\n") == std::string::npos) {
+    std::string tmp = Network::recvRequest(socket_fd);
+    validResponse.append(tmp);
+  }
+
+  HttpParser parser;
+  std::map<std::string, std::string> parsed = parser.httpResMap(validResponse);
+  int contentLength = (parsed.find("content-length") != parsed.end())
+                          ? std::stoi(parsed["content-length"])
+                          : -1;
+  if (contentLength == -1) {
     throw std::exception();
   }
 
-  char * recvbuffer = new char[512];
-  if (recv(socket_fd, recvbuffer, sizeof(recvbuffer), 0) == -1) {
-    perror("recv");
-    throw std::exception();
-  }
+  // start to parse data
+  Network::assembleValidResponse(socket_fd, validResponse, contentLength);
+  std::cout << validResponse << std::endl << validResponse.size() << std::endl;
 
-  // std::cout << recvbuffer << std::endl;
-
-  return recvbuffer;
+  return validResponse;
 }

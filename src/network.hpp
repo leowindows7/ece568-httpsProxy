@@ -7,13 +7,19 @@
 #include <unistd.h>
 
 #include <cstring>
+#include <string>
 #include <utility>
 
+#include "httpParser.hpp"
+
+#define MAX_MSG_LENGTH 700000
 class Network {
-  int socketfd;
   struct addrinfo * socketInfo;
+  int socketfd;
 
  public:
+  Network() : socketInfo(nullptr), socketfd(-1) {}
+
   template<typename T, typename U>
   std::pair<T, U> connectSetup(const char * hostName, int port_num) {
     struct addrinfo hints;
@@ -27,7 +33,7 @@ class Network {
     if ((status = getaddrinfo(
              hostName, std::to_string(port_num).c_str(), &hints, &socketInfo)) != 0) {
       // TODO: throw exception
-      fprintf(stderr, "Error: getaddrinfo error\n");
+      fprintf(stderr, "Error: getaddrinfo error %s\n", gai_strerror(status));
       exit(EXIT_FAILURE);
     }
 
@@ -44,14 +50,59 @@ class Network {
     return connectInfo;
   }
 
-  Network() : socketfd(-1), socketInfo(nullptr) {}
+  static void sendRequest(int client_connection_fd, const void * msg, const size_t size) {
+    if (send(client_connection_fd, msg, size, 0) == -1) {
+      perror("send");
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  static std::string recvRequest(int connection_fd) {
+    char buf[MAX_MSG_LENGTH] = {0};
+    int num_bytes = 0;
+    if ((num_bytes = recv(connection_fd, buf, sizeof(buf), 0)) == -1) {
+      perror("recv");
+      exit(EXIT_FAILURE);
+    }
+    buf[num_bytes] = '\0';
+
+    return std::string(buf);
+  }
+
+  static int findContentLength(std::string s) {
+    if (s.find("content-length") == std::string::npos) {
+      return -1;
+    }
+
+    HttpParser parser;
+    std::map<std::string, std::string> parsedHeader = parser.httpResMap(s);
+    return std::stoi(parsedHeader["content-length"]);
+  }
+
+  static void assembleValidResponse(int socketfd,
+                                    std::string & response,
+                                    int contentLength) {
+    if (response.find("\r\n\r\n") == std::string::npos) {
+      throw std::exception();  // invalid input
+    }
+
+    while (response.size() < contentLength) {
+      std::string tmp = recvRequest(socketfd);
+      response.append(tmp);
+    }
+  }
 
   ~Network() {
-    freeaddrinfo(socketInfo);
-    if (close(socketfd) == -1) {
-      // TODO: throw exception
-      perror("close");
-      exit(EXIT_FAILURE);
+    if (socketInfo != nullptr) {
+      freeaddrinfo(socketInfo);
+    }
+
+    if (socketfd != -1) {
+      if (close(socketfd) == -1) {
+        // TODO: throw exception
+        perror("~Network() close");
+        exit(EXIT_FAILURE);
+      }
     }
   }
 };

@@ -1,14 +1,11 @@
-#include <netdb.h>
-#include <sys/socket.h>
-#include <unistd.h>
+#include "httpParser.hpp"
 
-#include <cstring>
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <vector>
+std::string HttpParser::send200OK() {
+  std::string okString = "HTTP/1.1 200 OK\r\n\r\n";
+  return okString;
+}
 
-std::map<std::string, std::string> httpResMap(std::string response) {
+std::map<std::string, std::string> HttpParser::httpResMap(std::string response) {
   std::map<std::string, std::string> responseMap;
   size_t pos = 0;
   std::string delimiter = "\n";
@@ -35,7 +32,8 @@ std::map<std::string, std::string> httpResMap(std::string response) {
   // get header
   response.erase(0, pos + delimiter.length());
   std::string header = "";
-  while ((pos = response.find(delimiter)) != 1) {
+  while ((pos = response.find(delimiter)) != 1 &&
+         response.find(delimiter) != std::string::npos) {
     token = response.substr(0, pos);
     header += token + "\n";
     response.erase(0, pos + delimiter.length());
@@ -55,41 +53,28 @@ std::map<std::string, std::string> httpResMap(std::string response) {
     tokenValue = header.substr(1, pos - 1);
     // cout << tokenValue << endl;
     header.erase(0, pos + delimiter.length());
+    stringToLower(tokenKey);
     responseMap.insert({tokenKey, tokenValue});
   }
+
+  if (responseMap["Type"] == "Request") {
+    if ((pos = responseMap["host"].find(":")) != std::string::npos) {
+      std::string tmp = responseMap["host"];
+      responseMap["host"] = responseMap["host"].substr(0, pos);
+      responseMap.insert({"Port", tmp.substr(pos + 1, responseMap["host"].length())});
+    }
+    else {
+      responseMap.insert({"Port", "-1"});
+    }
+  }
+  if ((pos = responseMap["host"].find("\r")) != std::string::npos) {
+    responseMap["host"] = responseMap["host"].substr(0, pos);
+  }
   return responseMap;
-    std::string header = "";
-    while ((pos = response.find(delimiter)) != 1)
-    {
-        token = response.substr(0, pos);
-        header += token + "\n";
-        response.erase(0, pos + delimiter.length());
-    }
-    response.erase(0, pos + delimiter.length());
-    // body
-    responseMap.insert({"Body", response});
-    // parse header, each attribute before : will be used as key
-    std::string headerDeli = ":";
-    std::string tokenKey;
-    std::string tokenValue;
-    while ((pos = header.find(headerDeli)) != std::string::npos)
-    {
-        tokenKey = header.substr(0, pos);
-        // cout << tokenKey << endl;
-        header.erase(0, pos + headerDeli.length());
-        pos = header.find(delimiter);
-        tokenValue = header.substr(1, pos - 1);
-        // cout << tokenValue << endl;
-        header.erase(0, pos + delimiter.length());
-        responseMap.insert({tokenKey, tokenValue});
-    }
-    if(responseMap["Type"] == "Request"){
-        if((pos = responseMap["Host"].find(":")) > 0){
-            responseMap["Host"] = responseMap["Host"].substr(0, pos);
-            responseMap.insert({"Port", responseMap["Host"].substr(pos + 1, responseMap["Host"].length())});
-        } else {
-            responseMap.insert({"Port", "-1"});
-        }
-    }
-    return responseMap;
+}
+
+void stringToLower(std::string & s) {
+  for (auto iter = s.begin(); iter != s.end(); iter++) {
+    *iter = std::tolower(*iter);
+  }
 }

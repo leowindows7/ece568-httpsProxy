@@ -1,4 +1,22 @@
 #ifndef HTTPPARSER_HPP
 #define HTTPPARSER_HPP
-std::map<std::string, std::string> httpResMap(std::string header);
+
+#include <netdb.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <string>
+#include <vector>
+
+void stringToLower(std::string & s);
+
+class HttpParser {
+ public:
+  std::map<std::string, std::string> httpResMap(std::string header);
+  std::string send200OK();
+};
 #endif
