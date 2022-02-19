@@ -12,7 +12,7 @@ CacheController::CacheController(LRUCache myCahe)
     this->myCahe = myCahe;
 }
 
-bool CacheController::toRevalidate(std::string url_string)
+bool CacheController::toRevalidate(std::string url_string, std::map<std::string, std::string> checkMap)
 {
     std::map<std::string, std::string> responseMap = myCahe.getResponse(url_string);
     if (responseMap.empty())
@@ -30,10 +30,8 @@ bool CacheController::toRevalidate(std::string url_string)
         if (cacheControl_str.find("max-age=") != std::string::npos)
         {
             double maxAge = getMaxage(cacheControl_str);
-            time_t now;
-            time(&now);
-            struct tm *now_struct = localtime(&now);
-            //strptime(expires_str.c_str(), "%a, %d %b %Y %H:%M:%S", &expire_struct);
+            TimeMaker myTM;
+            return (maxAge + myTM.getDateNowDiff(responseMap.find("date")->second)) > 0;
         }
     }
     if (responseMap.find("pragma") != responseMap.end())
@@ -52,6 +50,12 @@ bool CacheController::toRevalidate(std::string url_string)
     {
         expires_str = responseMap.find("expires")->second;
     }
+    if (!checkCacheControl(cacheControl_str) && !checkPragma(pragma_str) &&
+           !checkVary(vary_str) && !checkExpires(expires_str)){
+               myCahe.put(url_string, checkMap);
+               return false;
+    }
+    
 
     return checkCacheControl(cacheControl_str) || checkPragma(pragma_str) ||
            checkVary(vary_str) || checkExpires(expires_str);

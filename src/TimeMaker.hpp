@@ -12,6 +12,6 @@ class TimeMaker
 {
 public:
   TimeMaker(){}
-  double getTimeInSec(std::string);
+  double getDateNowDiff(std::string);
 };
 #endif

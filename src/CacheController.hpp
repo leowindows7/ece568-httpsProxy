@@ -12,7 +12,7 @@ class CacheController
     LRUCache myCahe;
 public:
     
-    bool toRevalidate(std::string);
+    bool toRevalidate(std::string, std::map<std::string, std::string>);
     bool checkCacheControl(std::string);
     bool checkPragma(std::string);
     bool checkVary(std::string);
