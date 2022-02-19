@@ -21,11 +21,11 @@ void Proxy::serverBoot(int socketfd) {
   while (1) {
     int client_connection_fd = acceptRequest(socketfd);
     // handleNewTab(client_connection_fd);
-    dispatch_worker(client_connection_fd);
+    dispatch_worker(client_connection_fd, cache);
   }
 }
 
-void handleNewTab(int client_connection_fd) {
+void handleNewTab(int client_connection_fd, CacheController * cache) {
   while (1) {
     // get header from client
     std::string http_request = Network::recvRequest(client_connection_fd);
@@ -43,7 +43,8 @@ void handleNewTab(int client_connection_fd) {
 
     // handle action
     if (method.find("GET") != std::string::npos) {
-      handleGetRequest(hostname, port, client_connection_fd, http_request, headerMap);
+      handleGetRequest(
+          hostname, port, client_connection_fd, http_request, headerMap, cache);
     }
 
     else if (method.find("CONNECT") != std::string::npos) {
@@ -86,6 +87,10 @@ void handleConnectRequest(std::string hostname,
   }
 }
 
+Proxy::~Proxy() {
+  delete cache;
+}
+
 void handlePostRequest(std::string hostname,
                        int port,
                        int client_fd,
@@ -101,29 +106,29 @@ void handleGetRequest(std::string hostname,
                       int port,
                       int client_fd,
                       std::string http_request,
-                      std::map<std::string, std::string> & headerMap) {
-  Client c;
-  int server_fd = c.setUpSocket(hostname, port);
-  CacheController cache;
-
+                      std::map<std::string, std::string> & headerMap,
+                      CacheController * cache) {
   std::string recvbuf;
-  recvbuf = c.connectToHost(hostname, port, http_request, server_fd);
-  Network::sendRequest(client_fd, recvbuf.c_str(), recvbuf.size());
-  /*
-  if (cache.toRevalidate(headerMap) == true) {
+  if (cache->toRevalidate(headerMap["url"]) == true) {
     // get resposne from server
+    Client c;
+    int server_fd = c.setUpSocket(hostname, port);
+
+    recvbuf = c.connectToHost(hostname, port, http_request, server_fd);
+    headerMap["Body"] = recvbuf;
     // insert response to cache
+    cache->putInCache(headerMap["url"], headerMap);
   }
 
   else {
-    // send back the cahce result to client
+    recvbuf = cache->getCache(headerMap["url"]);
   }
-  */
+  Network::sendRequest(client_fd, recvbuf.c_str(), recvbuf.size());
 }
 
-void Proxy::dispatch_worker(int socketfd) {
+void Proxy::dispatch_worker(int socketfd, CacheController * cache) {
   // std::cout << buf << std::endl;
-  std::thread(handleNewTab, socketfd).detach();
+  std::thread(handleNewTab, socketfd, std::ref(cache)).detach();
 }
 
 // TODO: move this to Network class
