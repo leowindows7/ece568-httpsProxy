@@ -19,6 +19,12 @@ public:
   std::map<std::string, std::string> getResponse(std::string);
   void display();
   void getCapacity();
+  LRUCache(): capacity(0){}
+  LRUCache(const LRUCache &rhs): capacity(rhs.capacity){}
+  LRUCache & operator=(const LRUCache &rhs){
+    capacity = rhs.capacity;
+  }
+  ~LRUCache(){}
 };
 
 #endif
