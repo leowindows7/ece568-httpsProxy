@@ -8,6 +8,10 @@
 #include <time.h>
 double TimeMaker::getDateNowDiff(std::string time_str)
 {
+    if (time_str.find(" GMT") != std::string::npos)
+    {
+        time_str = time_str.substr(0, time_str.length() - 4);
+    }
     time_t now;
     time(&now);
     double seconds;

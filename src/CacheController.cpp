@@ -20,7 +20,7 @@ bool CacheController::toRevalidate(std::string url_string, std::map<std::string,
     std::map<std::string, std::string> responseMap = myCahe.getResponse(url_string);
     if (responseMap.empty())
     {
-        // no response in cache
+        // no response in cache go to server
         return true;
     }
     std::string cacheControl_str("");
@@ -34,7 +34,7 @@ bool CacheController::toRevalidate(std::string url_string, std::map<std::string,
         {
             double maxAge = getMaxage(cacheControl_str);
             TimeMaker myTM;
-            return (maxAge + myTM.getDateNowDiff(responseMap.find("date")->second)) > 0;
+            return (maxAge + myTM.getDateNowDiff(responseMap.find("date")->second)) <= 0;
         }
     }
     if (responseMap.find("pragma") != responseMap.end())
