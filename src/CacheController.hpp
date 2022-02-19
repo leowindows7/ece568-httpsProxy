@@ -18,6 +18,7 @@ public:
     bool checkVary(std::string);
     int getMaxage(std::string);
     bool checkExpires(std::string);
+    void putInCache(std::string, std::map<std::string, std::string>);
     CacheController(LRUCache);
     std::string controlParser();
 };

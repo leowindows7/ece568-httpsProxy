@@ -11,7 +11,10 @@ CacheController::CacheController(LRUCache myCahe)
 {
     this->myCahe = myCahe;
 }
-
+void CacheController::putInCache(std::string url_str, std::map<std::string, std::string> resMap)
+{
+    myCahe.put(url_str, resMap);
+}
 bool CacheController::toRevalidate(std::string url_string, std::map<std::string, std::string> checkMap)
 {
     std::map<std::string, std::string> responseMap = myCahe.getResponse(url_string);
@@ -51,11 +54,11 @@ bool CacheController::toRevalidate(std::string url_string, std::map<std::string,
         expires_str = responseMap.find("expires")->second;
     }
     if (!checkCacheControl(cacheControl_str) && !checkPragma(pragma_str) &&
-           !checkVary(vary_str) && !checkExpires(expires_str)){
-               myCahe.put(url_string, checkMap);
-               return false;
+        !checkVary(vary_str) && !checkExpires(expires_str))
+    {
+        myCahe.put(url_string, checkMap);
+        return false;
     }
-    
 
     return checkCacheControl(cacheControl_str) || checkPragma(pragma_str) ||
            checkVary(vary_str) || checkExpires(expires_str);
