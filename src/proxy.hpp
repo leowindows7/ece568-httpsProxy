@@ -10,7 +10,8 @@ void sendToHost(std::string hostname, int port, int socketfd, std::string reques
 void handleGetRequest(std::string hostname,
                       int port,
                       int socketfd,
-                      std::string http_request);
+                      std::string http_request,
+                      std::map<std::string, std::string> & headerMap);
 // TODO: move this to Network class
 void handleConnectRequest(std::string hostname,
                           int port,

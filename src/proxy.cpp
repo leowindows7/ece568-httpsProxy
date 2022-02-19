@@ -8,6 +8,7 @@
 #include <string>
 #include <thread>
 
+#include "CacheController.hpp"
 #include "httpParser.hpp"
 #include "inputParser.hpp"
 #include "network.hpp"
@@ -42,7 +43,7 @@ void handleNewTab(int client_connection_fd) {
 
     // handle action
     if (method.find("GET") != std::string::npos) {
-      handleGetRequest(hostname, port, client_connection_fd, http_request);
+      handleGetRequest(hostname, port, client_connection_fd, http_request, headerMap);
     }
 
     else if (method.find("CONNECT") != std::string::npos) {
@@ -99,17 +100,25 @@ void handlePostRequest(std::string hostname,
 void handleGetRequest(std::string hostname,
                       int port,
                       int client_fd,
-                      std::string http_request) {
+                      std::string http_request,
+                      std::map<std::string, std::string> & headerMap) {
   Client c;
-  std::string recvbuf;
   int server_fd = c.setUpSocket(hostname, port);
-  recvbuf = c.connectToHost(hostname, port, http_request, server_fd);
+  CacheController cache;
 
-  if (send(client_fd, recvbuf.c_str(), recvbuf.size(), 0) == -1) {
-    // TOOO: refactor to throw exception
-    perror("send");
-    throw std::exception();
+  std::string recvbuf;
+  recvbuf = c.connectToHost(hostname, port, http_request, server_fd);
+  Network::sendRequest(client_fd, recvbuf.c_str(), recvbuf.size());
+  /*
+  if (cache.toRevalidate(headerMap) == true) {
+    // get resposne from server
+    // insert response to cache
   }
+
+  else {
+    // send back the cahce result to client
+  }
+  */
 }
 
 void Proxy::dispatch_worker(int socketfd) {
