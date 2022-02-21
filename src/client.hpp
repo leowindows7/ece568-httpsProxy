@@ -17,4 +17,7 @@ class Client {
                             std::string request,
                             int socket_fd);
 };
+
+std::string handleChunkData(std::string responseHeader, int socket_fd);
+std::string handleContentLength(std::string response, int socket_fd);
 #endif

@@ -24,9 +24,26 @@ std::string Client::connectToHost(std::string hostname,
   Network::sendRequest(socket_fd, http_request.c_str(), http_request.size());
 
   std::string response = Network::recvRequest(socket_fd);
-  std::cout << response << std::endl;
-  std::string validResponse = response;
+  HttpParser parser;
+  std::map<std::string, std::string> responseMap = parser.httpResMap(response);
+
+  std::string recvbuf;
+  // handle Chunked data
+  if (responseMap["transfer-encoding"].find("chunked") != std::string::npos) {
+    recvbuf = handleChunkData(response, socket_fd);
+    std::cout << recvbuf << std::endl;
+  }
+
+  else {
+    recvbuf = handleContentLength(response, socket_fd);
+  }
+
+  return recvbuf;
+}
+
+std::string handleContentLength(std::string response, int socket_fd) {
   // find the end of header
+  std::string validResponse = response;
   while (validResponse.find("\r\n\r\n") == std::string::npos) {
     std::string tmp = Network::recvRequest(socket_fd);
     validResponse.append(tmp);
@@ -43,9 +60,25 @@ std::string Client::connectToHost(std::string hostname,
 
   // start to parse data
   Network::assembleValidResponse(socket_fd, validResponse, contentLength);
-  std::cout << validResponse << std::endl << validResponse.size() << std::endl;
-
   return validResponse;
+}
+
+std::string handleChunkData(std::string responseHeader, int socket_fd) {
+  std::string chunkResponse;
+  size_t headerLen = responseHeader.find("\r\n\r\n") + 4;
+  std::string header = responseHeader.substr(0, headerLen);
+  chunkResponse.append(header);
+
+  std::string recv = responseHeader.substr(headerLen + 4);
+  while (recv.find("\r\n0") == std::string::npos) {
+    int startofChar = recv.find("\r\n") + 2;
+    int endofChar = recv.find("\r\n", startofChar);
+    std::string tmp = recv.substr(startofChar, endofChar - startofChar - 1);
+    chunkResponse.append(tmp);
+    recv = Network::recvRequest(socket_fd);
+  }
+
+  return chunkResponse;
 }
 
 int Client::setUpSocket(std::string hostname, int port_num) {

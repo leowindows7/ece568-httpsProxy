@@ -31,8 +31,8 @@ void handleNewTab(int client_connection_fd, CacheController * cache) {
   while (1) {
     // get header from client
     std::string http_request = Network::recvRequest(client_connection_fd);
-    std::cout << "Request Header:" << std::endl
-              << http_request << std::endl;  // TODO: remove this
+    // std::cout << "Request Header:" << std::endl
+    //          << http_request << std::endl;  // TODO: remove this
 
     // parse header
     HttpParser httpParser;
