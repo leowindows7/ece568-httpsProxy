@@ -19,7 +19,7 @@
 #define DEFAULT_PORT 12345
 
 int Proxy::proxyServerSetup(int port) {
-  logger.openLogFile("./rec.log");
+  logger.openLogFile("./rec.log");  // TODO: write this to /var/err/*.log
   return setupServer(port);
 }
 
@@ -45,7 +45,7 @@ void handleNewTab(int client_connection_fd, CacheController * cache, HttpLog & l
                    ? 80
                    : std::stoi(headerMap["Port"]);
     std::string method = headerMap["Method"];
-    headerMap["id"] = Proxy::requestId++;
+    headerMap["id"] = std::to_string(Proxy::requestId++);
 
     // handle action
     if (method.find("GET") != std::string::npos) {
@@ -116,26 +116,36 @@ void handleGetRequest(std::string hostname,
                       CacheController * cache,
                       HttpLog & logger) {
   std::string recvbuf;
+  std::map<std::string, std::string> responseMap;
+  HttpParser parser;
   if (cache->toRevalidate(requestMap["url"]) == true) {
     // get resposne from server
     Client c;
     int server_fd = c.setUpSocket(hostname, port);
 
     recvbuf = c.connectToHost(hostname, port, http_request, server_fd);
-    HttpParser parser;
-    std::map<std::string, std::string> responseMap = parser.httpResMap(recvbuf);
+    responseMap = parser.httpResMap(recvbuf);
     // insert response to cache
     responseMap["Body"] = recvbuf;
     cache->putInCache(requestMap["url"], responseMap);
 
-    std::string logMsg = "GET " + requestMap["host"] + "/ HTTP/1.1 from " +
-                         getIP(requestMap["host"]) + " @ " + responseMap["date"];
+    std::string logMsg = requestMap["id"] + ": \"GET " + requestMap["host"] +
+                         "/ HTTP/1.1\" from " + getIP(requestMap["host"]) + " @ " +
+                         responseMap["date"];
     logger.writeLog(logMsg);
+    std::string cachemsg = requestMap["id"] + ": not in cache";
+    logger.writeLog(cachemsg);
   }
 
   else {
     recvbuf = cache->getCache(requestMap["url"]);
+    responseMap = parser.httpResMap(recvbuf);
   }
+
+  std::string responseMsg = requestMap["id"] + ": Received \"HTTP/1.1 " +
+                            responseMap["StatusCode"] + "\" from " + requestMap["host"];
+
+  logger.writeLog(responseMsg);
   Network::sendRequest(client_fd, recvbuf.c_str(), recvbuf.size());
 }
 
