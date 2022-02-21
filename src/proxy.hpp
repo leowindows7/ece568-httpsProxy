@@ -2,6 +2,7 @@
 #define PROXY_HPP
 
 #include "CacheController.hpp"
+#include "HttpLog.hpp"
 #include "client.hpp"
 #include "server.hpp"
 
@@ -13,7 +14,8 @@ void handleGetRequest(std::string hostname,
                       int socketfd,
                       std::string http_request,
                       std::map<std::string, std::string> & headerMap,
-                      CacheController * cache);
+                      CacheController * cache,
+                      HttpLog & logger);
 // TODO: move this to Network class
 void handleConnectRequest(std::string hostname,
                           int port,
@@ -25,12 +27,15 @@ void handlePostRequest(std::string hostname,
                        int port,
                        int client_fd,
                        std::string http_request);
-void handleNewTab(int client_connection_fd, CacheController * cache);
+void handleNewTab(int client_connection_fd, CacheController * cache, HttpLog & logger);
+std::string getIP(std::string hostname);
 
 class Proxy : public Server {
   CacheController * cache;
+  HttpLog logger;
 
  public:
+  static int requestId;
   Proxy() : cache(new CacheController(5)) {}
   Proxy(size_t size) : cache(new CacheController(size)) {}
   ~Proxy();
@@ -38,5 +43,7 @@ class Proxy : public Server {
   void serverBoot(int socketfd);
   void dispatch_worker(int socketfd, CacheController * cache);
 };
+
+int Proxy::requestId = 0;
 
 #endif

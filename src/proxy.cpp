@@ -1,6 +1,9 @@
 #include "proxy.hpp"
 
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <poll.h>
+#include <sys/socket.h>
 
 #include <cstring>
 #include <iostream>
@@ -9,25 +12,25 @@
 #include <thread>
 
 #include "CacheController.hpp"
+#include "HttpLog.hpp"
 #include "httpParser.hpp"
 #include "inputParser.hpp"
 #include "network.hpp"
-
 #define DEFAULT_PORT 12345
 
 int Proxy::proxyServerSetup(int port) {
+  logger.openLogFile("./rec.log");
   return setupServer(port);
 }
 
 void Proxy::serverBoot(int socketfd) {
   while (1) {
     int client_connection_fd = acceptRequest(socketfd);
-    // handleNewTab(client_connection_fd);
     dispatch_worker(client_connection_fd, cache);
   }
 }
 
-void handleNewTab(int client_connection_fd, CacheController * cache) {
+void handleNewTab(int client_connection_fd, CacheController * cache, HttpLog & logger) {
   while (1) {
     // get header from client
     std::string http_request = Network::recvRequest(client_connection_fd);
@@ -42,11 +45,12 @@ void handleNewTab(int client_connection_fd, CacheController * cache) {
                    ? 80
                    : std::stoi(headerMap["Port"]);
     std::string method = headerMap["Method"];
+    headerMap["id"] = Proxy::requestId++;
 
     // handle action
     if (method.find("GET") != std::string::npos) {
       handleGetRequest(
-          hostname, port, client_connection_fd, http_request, headerMap, cache);
+          hostname, port, client_connection_fd, http_request, headerMap, cache, logger);
     }
 
     else if (method.find("CONNECT") != std::string::npos) {
@@ -109,7 +113,8 @@ void handleGetRequest(std::string hostname,
                       int client_fd,
                       std::string http_request,
                       std::map<std::string, std::string> & requestMap,
-                      CacheController * cache) {
+                      CacheController * cache,
+                      HttpLog & logger) {
   std::string recvbuf;
   if (cache->toRevalidate(requestMap["url"]) == true) {
     // get resposne from server
@@ -122,6 +127,10 @@ void handleGetRequest(std::string hostname,
     // insert response to cache
     responseMap["Body"] = recvbuf;
     cache->putInCache(requestMap["url"], responseMap);
+
+    std::string logMsg = "GET " + requestMap["host"] + "/ HTTP/1.1 from " +
+                         getIP(requestMap["host"]) + " @ " + responseMap["date"];
+    logger.writeLog(logMsg);
   }
 
   else {
@@ -130,9 +139,17 @@ void handleGetRequest(std::string hostname,
   Network::sendRequest(client_fd, recvbuf.c_str(), recvbuf.size());
 }
 
+std::string getIP(std::string hostname) {
+  hostent * record = gethostbyname(hostname.c_str());
+  in_addr * address = (in_addr *)record->h_addr;
+  std::string ip_address = inet_ntoa(*address);
+
+  return ip_address;
+}
+
 void Proxy::dispatch_worker(int socketfd, CacheController * cache) {
   // std::cout << buf << std::endl;
-  std::thread(handleNewTab, socketfd, std::ref(cache)).detach();
+  std::thread(handleNewTab, socketfd, std::ref(cache), std::ref(logger)).detach();
 }
 
 // TODO: move this to Network class
