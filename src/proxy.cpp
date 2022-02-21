@@ -13,6 +13,8 @@
 #include "inputParser.hpp"
 #include "network.hpp"
 
+#define DEFAULT_PORT 12345
+
 int Proxy::proxyServerSetup(int port) {
   return setupServer(port);
 }
@@ -106,22 +108,24 @@ void handleGetRequest(std::string hostname,
                       int port,
                       int client_fd,
                       std::string http_request,
-                      std::map<std::string, std::string> & headerMap,
+                      std::map<std::string, std::string> & requestMap,
                       CacheController * cache) {
   std::string recvbuf;
-  if (cache->toRevalidate(headerMap["url"]) == true) {
+  if (cache->toRevalidate(requestMap["url"]) == true) {
     // get resposne from server
     Client c;
     int server_fd = c.setUpSocket(hostname, port);
 
     recvbuf = c.connectToHost(hostname, port, http_request, server_fd);
-    headerMap["Body"] = recvbuf;
+    HttpParser parser;
+    std::map<std::string, std::string> responseMap = parser.httpResMap(recvbuf);
     // insert response to cache
-    cache->putInCache(headerMap["url"], headerMap);
+    responseMap["Body"] = recvbuf;
+    cache->putInCache(requestMap["url"], responseMap);
   }
 
   else {
-    recvbuf = cache->getCache(headerMap["url"]);
+    recvbuf = cache->getCache(requestMap["url"]);
   }
   Network::sendRequest(client_fd, recvbuf.c_str(), recvbuf.size());
 }
@@ -140,11 +144,7 @@ void setupConnectIO(struct pollfd pfds[], int client_fd, int server_fd) {
 }
 
 int main(int argc, char ** argv) {
-  std::vector<std::string> opts = {"port"};
-  InputParser parser;
-  std::unordered_map<std::string, int> parsedOpt = parser.parseOpt<int>(argc, argv, opts);
-
   Proxy p;
-  int socketfd = p.proxyServerSetup(parsedOpt["port"]);
+  int socketfd = p.proxyServerSetup(DEFAULT_PORT);
   p.serverBoot(socketfd);
 }

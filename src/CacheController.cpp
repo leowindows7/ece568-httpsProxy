@@ -42,7 +42,8 @@ bool CacheController::toRevalidate(std::string url_string) {
     if (cacheControl_str.find("max-age=") != std::string::npos) {
       double maxAge = getMaxage(cacheControl_str);
       TimeMaker myTM;
-      return (maxAge + myTM.getDateNowDiff(responseMap.find("date")->second)) > 0;
+      double diff = maxAge + myTM.getDateNowDiff(responseMap.find("date")->second);
+      return (diff <= 0);
     }
   }
   if (responseMap.find("pragma") != responseMap.end()) {

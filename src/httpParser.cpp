@@ -22,8 +22,10 @@ int HttpParser::getRequestType(std::string & response,
   // response HTTP/ will be at the begining of the first line
   int firstLine_pos = firstLine.find("HTTP/");
   int first_space_pos = firstLine.find(" ");
-  if (firstLine_pos - first_space_pos > 5){ //http://
-    responseMap.insert({"url", firstLine.substr(first_space_pos + 1, firstLine_pos)});
+  if (firstLine_pos - first_space_pos > 5) {  //http://
+    responseMap.insert(
+        {"url",
+         firstLine.substr(first_space_pos + 1, firstLine_pos - first_space_pos - 2)});
   }
   if (firstLine_pos == 0) {
     responseMap.insert({"Type", "Response"});
