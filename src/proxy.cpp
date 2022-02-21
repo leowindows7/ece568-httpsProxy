@@ -8,9 +8,12 @@
 #include <string>
 #include <thread>
 
+#include "CacheController.hpp"
 #include "httpParser.hpp"
 #include "inputParser.hpp"
 #include "network.hpp"
+
+#define DEFAULT_PORT 12345
 
 int Proxy::proxyServerSetup(int port) {
   return setupServer(port);
@@ -20,11 +23,11 @@ void Proxy::serverBoot(int socketfd) {
   while (1) {
     int client_connection_fd = acceptRequest(socketfd);
     // handleNewTab(client_connection_fd);
-    dispatch_worker(client_connection_fd);
+    dispatch_worker(client_connection_fd, cache);
   }
 }
 
-void handleNewTab(int client_connection_fd) {
+void handleNewTab(int client_connection_fd, CacheController * cache) {
   while (1) {
     // get header from client
     std::string http_request = Network::recvRequest(client_connection_fd);
@@ -42,7 +45,8 @@ void handleNewTab(int client_connection_fd) {
 
     // handle action
     if (method.find("GET") != std::string::npos) {
-      handleGetRequest(hostname, port, client_connection_fd, http_request);
+      handleGetRequest(
+          hostname, port, client_connection_fd, http_request, headerMap, cache);
     }
 
     else if (method.find("CONNECT") != std::string::npos) {
@@ -85,6 +89,10 @@ void handleConnectRequest(std::string hostname,
   }
 }
 
+Proxy::~Proxy() {
+  delete cache;
+}
+
 void handlePostRequest(std::string hostname,
                        int port,
                        int client_fd,
@@ -99,22 +107,32 @@ void handlePostRequest(std::string hostname,
 void handleGetRequest(std::string hostname,
                       int port,
                       int client_fd,
-                      std::string http_request) {
-  Client c;
+                      std::string http_request,
+                      std::map<std::string, std::string> & requestMap,
+                      CacheController * cache) {
   std::string recvbuf;
-  int server_fd = c.setUpSocket(hostname, port);
-  recvbuf = c.connectToHost(hostname, port, http_request, server_fd);
+  if (cache->toRevalidate(requestMap["url"]) == true) {
+    // get resposne from server
+    Client c;
+    int server_fd = c.setUpSocket(hostname, port);
 
-  if (send(client_fd, recvbuf.c_str(), recvbuf.size(), 0) == -1) {
-    // TOOO: refactor to throw exception
-    perror("send");
-    throw std::exception();
+    recvbuf = c.connectToHost(hostname, port, http_request, server_fd);
+    HttpParser parser;
+    std::map<std::string, std::string> responseMap = parser.httpResMap(recvbuf);
+    // insert response to cache
+    responseMap["Body"] = recvbuf;
+    cache->putInCache(requestMap["url"], responseMap);
   }
+
+  else {
+    recvbuf = cache->getCache(requestMap["url"]);
+  }
+  Network::sendRequest(client_fd, recvbuf.c_str(), recvbuf.size());
 }
 
-void Proxy::dispatch_worker(int socketfd) {
+void Proxy::dispatch_worker(int socketfd, CacheController * cache) {
   // std::cout << buf << std::endl;
-  std::thread(handleNewTab, socketfd).detach();
+  std::thread(handleNewTab, socketfd, std::ref(cache)).detach();
 }
 
 // TODO: move this to Network class
@@ -126,11 +144,7 @@ void setupConnectIO(struct pollfd pfds[], int client_fd, int server_fd) {
 }
 
 int main(int argc, char ** argv) {
-  std::vector<std::string> opts = {"port"};
-  InputParser parser;
-  std::unordered_map<std::string, int> parsedOpt = parser.parseOpt<int>(argc, argv, opts);
-
   Proxy p;
-  int socketfd = p.proxyServerSetup(parsedOpt["port"]);
+  int socketfd = p.proxyServerSetup(DEFAULT_PORT);
   p.serverBoot(socketfd);
 }
