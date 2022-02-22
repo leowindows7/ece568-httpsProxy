@@ -31,7 +31,7 @@ std::string Client::connectToHost(std::string hostname,
   // handle Chunked data
   if (responseMap["transfer-encoding"].find("chunked") != std::string::npos) {
     recvbuf = handleChunkData(response, socket_fd);
-    std::cout << recvbuf << std::endl;
+    std::cout << recvbuf.size() << std::endl;
   }
 
   else {
@@ -65,19 +65,31 @@ std::string handleContentLength(std::string response, int socket_fd) {
 
 std::string handleChunkData(std::string responseHeader, int socket_fd) {
   std::string chunkResponse;
-  size_t headerLen = responseHeader.find("\r\n\r\n") + 4;
-  std::string header = responseHeader.substr(0, headerLen);
-  chunkResponse.append(header);
+  chunkResponse.append(responseHeader);
 
-  std::string recv = responseHeader.substr(headerLen + 4);
-  while (recv.find("\r\n0") == std::string::npos) {
-    int startofChar = recv.find("\r\n") + 2;
-    int endofChar = recv.find("\r\n", startofChar);
-    std::string tmp = recv.substr(startofChar, endofChar - startofChar - 1);
-    chunkResponse.append(tmp);
-    recv = Network::recvRequest(socket_fd);
+  char buffer[MAX_MSG_LENGTH] = {0};
+
+  int num_bytes = 0;
+  int sum = 0;
+  while (1) {
+    memset(buffer, 0, sizeof(buffer));
+    if ((num_bytes = recv(socket_fd, buffer, sizeof(buffer), 0)) == -1) {
+      perror("recv chunked");
+      throw std::exception();
+    }
+
+    std::string tmp(buffer);
+    chunkResponse.append(buffer, num_bytes);
+    sum += num_bytes;
+
+    std::cout << num_bytes << std::endl;
+
+    if (tmp.find("0\r\n\r\n") != std::string::npos) {
+      break;
+    }
   }
 
+  std::cout << chunkResponse.size() << std::endl;
   return chunkResponse;
 }
 
