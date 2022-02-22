@@ -72,19 +72,18 @@ std::string handleChunkData(std::string responseHeader, int socket_fd) {
   int num_bytes = 0;
   int sum = 0;
   while (1) {
-    memset(buffer, 0, sizeof(buffer));
-    if ((num_bytes = recv(socket_fd, buffer, sizeof(buffer), 0)) == -1) {
+    if ((num_bytes = recv(socket_fd, buffer + sum, sizeof(buffer) - num_bytes, 0)) ==
+        -1) {
       perror("recv chunked");
       throw std::exception();
     }
-
-    std::string tmp(buffer);
-    chunkResponse.append(buffer, num_bytes);
     sum += num_bytes;
 
     std::cout << num_bytes << std::endl;
 
-    if (tmp.find("0\r\n\r\n") != std::string::npos) {
+    std::string tmp(buffer);
+    if (num_bytes == 5) {
+      chunkResponse.append(buffer);
       break;
     }
   }
