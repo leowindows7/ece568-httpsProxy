@@ -7,6 +7,7 @@ PROXY_OBJS = proxy.o httpParser.o
 CACHE_OBJS = LRUCache.o
 CCONTROL_OBJS = CacheController.o LRUCache.o TimeMaker.o
 LOG_OBJS = HttpLog.o
+DAEMONS_OBJS = daemon.o
 
 all: $(TARGETS)
 proxy: $(SERVER_OBJS) $(CLIENT_OBJS) $(CCONTROL_OBJS) $(PROXY_OBJS) $(LOG_OBJS)
@@ -19,6 +20,8 @@ LRUCache: $(CACHE_OBJS) LRUCache_test.cpp
 
 CacheController: $(CCONTROL_OBJS) CacheController_test.cpp
 	$(CXX) -o $@ $(CXXFLAGS) $(CCONTROL_OBJS) CacheController_test.cpp
+daemon: $(DAEMONS_OBJS)
+
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $<
