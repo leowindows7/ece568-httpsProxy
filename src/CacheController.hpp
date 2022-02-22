@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
-
+#include "HttpLog.hpp"
 #include "LRUCache.hpp"
 
 class CacheController {
@@ -22,7 +22,7 @@ class CacheController {
   CacheController() {}
   ~CacheController();
   void putInCache(std::string, std::map<std::string, std::string>);
-  bool toRevalidate(std::string);
+  bool toRevalidate(std::string, HttpLog &, std::string);
   std::string getCache(std::string url);
 };
 

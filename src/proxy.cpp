@@ -118,7 +118,7 @@ void handleGetRequest(std::string hostname,
   std::string recvbuf;
   std::map<std::string, std::string> responseMap;
   HttpParser parser;
-  if (cache->toRevalidate(requestMap["url"]) == true) {
+  if (cache->toRevalidate(requestMap["url"], logger, requestMap["id"]) == true) {
     // get resposne from server
     Client c;
     int server_fd = c.setUpSocket(hostname, port);

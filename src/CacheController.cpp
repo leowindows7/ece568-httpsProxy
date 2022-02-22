@@ -27,10 +27,13 @@ std::string CacheController::getCache(std::string url) {
   return headerMap["Body"];
 }
 
-bool CacheController::toRevalidate(std::string url_string) {
+bool CacheController::toRevalidate(std::string url_string, HttpLog & logger, std::string id) {
   std::map<std::string, std::string> responseMap = cache->getResponse(url_string);
   if (responseMap.empty()) {
     // no response in cache
+    std::string logMsg = id + ": not in cache";
+    std::cout << logMsg << std::endl;
+    logger.writeLog(logMsg);
     return true;
   }
   std::string cacheControl_str("");
