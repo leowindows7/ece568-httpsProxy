@@ -29,4 +29,4 @@ CacheController: $(CCONTROL_OBJS) CacheController_test.cpp
 
 .PHONY: clean
 clean:
-	rm -f $(TARGETS) *~ *.o *.log
+	rm -f $(TARGETS) *~ *.o *.log daemon
