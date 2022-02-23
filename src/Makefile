@@ -9,7 +9,7 @@ CCONTROL_OBJS = CacheController.o LRUCache.o TimeMaker.o
 LOG_OBJS = HttpLog.o
 DAEMONS_OBJS = daemon.o
 
-all: $(TARGETS)
+all: $(TARGETS) daemon
 daemon: $(TARGETS) $(DAEMONS_OBJS)
 	$(CXX) -o $@ $(CXXFLAGS) $(DAEMONS_OBJS)
 proxy: $(SERVER_OBJS) $(CLIENT_OBJS) $(CCONTROL_OBJS) $(PROXY_OBJS) $(LOG_OBJS)
@@ -29,4 +29,4 @@ CacheController: $(CCONTROL_OBJS) CacheController_test.cpp
 
 .PHONY: clean
 clean:
-	rm -f $(TARGETS) *~ *.o rec.log
+	rm -f $(TARGETS) *~ *.o *.log

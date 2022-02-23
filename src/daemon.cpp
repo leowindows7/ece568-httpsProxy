@@ -5,7 +5,6 @@
 
 #include <cstdio>
 #include <cstdlib>
-
 #define STDIN 0
 #define STDOUT 1
 #define STDERR 2
@@ -57,9 +56,9 @@ void create_daemon() {
   int ret_out = dup2(dev_null_fd, STDOUT);
   int ret_err = dup2(dev_null_fd, STDERR);
 
-  close(STDIN);
-  close(STDOUT);
-  close(STDERR);
+  fclose(stdin);
+  fclose(stdout);
+  fclose(stderr);
 
   if (ret_in == -1 || ret_err == -1 || ret_out == -1) {
     perror("Error:");
