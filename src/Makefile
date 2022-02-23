@@ -10,6 +10,8 @@ LOG_OBJS = HttpLog.o
 DAEMONS_OBJS = daemon.o
 
 all: $(TARGETS)
+daemon: $(TARGETS) $(DAEMONS_OBJS)
+	$(CXX) -o $@ $(CXXFLAGS) $(DAEMONS_OBJS)
 proxy: $(SERVER_OBJS) $(CLIENT_OBJS) $(CCONTROL_OBJS) $(PROXY_OBJS) $(LOG_OBJS)
 	$(CXX) -o $@ $(CXXFLAGS) $(PROXY_OBJS) $(SERVER_OBJS) $(CLIENT_OBJS) $(CCONTROL_OBJS) $(LOG_OBJS) -lpthread
 
@@ -20,7 +22,6 @@ LRUCache: $(CACHE_OBJS) LRUCache_test.cpp
 
 CacheController: $(CCONTROL_OBJS) CacheController_test.cpp
 	$(CXX) -o $@ $(CXXFLAGS) $(CCONTROL_OBJS) CacheController_test.cpp
-daemon: $(DAEMONS_OBJS)
 
 
 %.o: %.cpp

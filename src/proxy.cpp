@@ -19,7 +19,7 @@
 #define DEFAULT_PORT 12345
 
 int Proxy::proxyServerSetup(int port) {
-  logger.openLogFile("./rec.log");  // TODO: write this to /var/err/*.log
+  logger.openLogFile("/var/log/erss");  // TODO: write this to /var/err/*.log
   return setupServer(port);
 }
 
@@ -31,35 +31,39 @@ void Proxy::serverBoot(int socketfd) {
 }
 
 void handleNewTab(int client_connection_fd, CacheController * cache, HttpLog & logger) {
-  while (1) {
-    // get header from client
-    std::string http_request = Network::recvRequest(client_connection_fd);
-    std::cout << "Request Header:" << std::endl
-              << http_request << std::endl;  // TODO: remove this
+  try {
+    while (1) {
+      // get header from client
+      std::string http_request = Network::recvRequest(client_connection_fd);
 
-    // parse header
-    HttpParser httpParser;
-    std::map<std::string, std::string> headerMap = httpParser.httpResMap(http_request);
-    std::string hostname = headerMap["host"];
-    int port = (headerMap["Port"] == "-1" || headerMap["Port"] == "")
-                   ? 80
-                   : std::stoi(headerMap["Port"]);
-    std::string method = headerMap["Method"];
-    headerMap["id"] = std::to_string(Proxy::requestId++);
+      // parse header
+      HttpParser httpParser;
+      std::map<std::string, std::string> headerMap = httpParser.httpResMap(http_request);
+      std::string hostname = headerMap["host"];
+      int port = (headerMap["Port"] == "-1" || headerMap["Port"] == "")
+                     ? 80
+                     : std::stoi(headerMap["Port"]);
+      std::string method = headerMap["Method"];
+      headerMap["id"] = std::to_string(Proxy::requestId++);
 
-    // handle action
-    if (method.find("GET") != std::string::npos) {
-      handleGetRequest(
-          hostname, port, client_connection_fd, http_request, headerMap, cache, logger);
+      // handle action
+      if (method.find("GET") != std::string::npos) {
+        handleGetRequest(
+            hostname, port, client_connection_fd, http_request, headerMap, cache, logger);
+      }
+
+      else if (method.find("CONNECT") != std::string::npos) {
+        handleConnectRequest(hostname, port, client_connection_fd, http_request);
+      }
+
+      else if (method.find("POST") != std::string::npos) {
+        handlePostRequest(hostname, port, client_connection_fd, http_request);
+      }
     }
+  }
 
-    else if (method.find("CONNECT") != std::string::npos) {
-      handleConnectRequest(hostname, port, client_connection_fd, http_request);
-    }
-
-    else if (method.find("POST") != std::string::npos) {
-      handlePostRequest(hostname, port, client_connection_fd, http_request);
-    }
+  catch (std::exception & e) {
+    handleNewTab(client_connection_fd, cache, logger);
   }
 }
 
@@ -118,6 +122,7 @@ void handleGetRequest(std::string hostname,
   std::string recvbuf;
   std::map<std::string, std::string> responseMap;
   HttpParser parser;
+
   if (cache->toRevalidate(requestMap["url"], logger, requestMap["id"]) == true) {
     // get resposne from server
     Client c;
@@ -128,13 +133,6 @@ void handleGetRequest(std::string hostname,
     // insert response to cache
     responseMap["Body"] = recvbuf;
     cache->putInCache(requestMap["url"], responseMap);
-
-    std::string logMsg = requestMap["id"] + ": \"GET " + requestMap["host"] +
-                         "/ HTTP/1.1\" from " + getIP(requestMap["host"]) + " @ " +
-                         responseMap["date"];
-    logger.writeLog(logMsg);
-    std::string cachemsg = requestMap["id"] + ": not in cache";
-    logger.writeLog(cachemsg);
   }
 
   else {
@@ -142,11 +140,25 @@ void handleGetRequest(std::string hostname,
     responseMap = parser.httpResMap(recvbuf);
   }
 
+  std::string logMsg = requestMap["id"] + ": \"GET " + requestMap["host"] +
+                       "/ HTTP/1.1\" from " + getIP(requestMap["host"]) + " @ " +
+                       responseMap["date"];
+  logger.writeLog(logMsg);
+
+  std::string serverMsg = requestMap["id"] + ": Requesting \"GET " + requestMap["host"] +
+                          "/ HTTP/1.1\" from " + requestMap["host"];
+  logger.writeLog(serverMsg);
+
   std::string responseMsg = requestMap["id"] + ": Received \"HTTP/1.1 " +
                             responseMap["StatusCode"] + "\" from " + requestMap["host"];
 
   logger.writeLog(responseMsg);
+  std::string clientMsg =
+      requestMap["id"] + ": Responding \"HTTP/1.1 " + responseMap["StatusCode"] + "\"";
+  logger.writeLog(clientMsg);
   Network::sendRequest(client_fd, recvbuf.c_str(), recvbuf.size());
+  std::string endMsg = requestMap["id"] + ": Tunnel closed";
+  logger.writeLog(endMsg);
 }
 
 std::string getIP(std::string hostname) {
@@ -158,7 +170,6 @@ std::string getIP(std::string hostname) {
 }
 
 void Proxy::dispatch_worker(int socketfd, CacheController * cache) {
-  // std::cout << buf << std::endl;
   std::thread(handleNewTab, socketfd, std::ref(cache), std::ref(logger)).detach();
 }
 

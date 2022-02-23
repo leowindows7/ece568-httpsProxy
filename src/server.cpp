@@ -30,19 +30,19 @@ int Server::setupServer(const int port_num) {
   if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
     // TODO: throw exception
     perror("setsockopt");
-    exit(EXIT_FAILURE);
+    throw std::exception();
   }
 
   if (bind(socket_fd, serviceinfo->ai_addr, serviceinfo->ai_addrlen) == -1) {
     // TODO: throw exception
-    perror("bind");
-    exit(EXIT_FAILURE);
+    // perror("bind");
+    throw std::exception();
   }
 
   if (listen(socket_fd, 100) == -1) {
     // TODO: refactor this
     perror("listen");
-    exit(EXIT_FAILURE);
+    throw std::exception();
   }
 
   return socket_fd;
@@ -71,7 +71,7 @@ int Server::acceptRequest(int socket_fd) {
       accept(socket_fd, (struct sockaddr *)&socket_addr, &socket_addr_len);
   if (client_connection_fd == -1) {
     perror("accept");
-    exit(EXIT_FAILURE);
+    throw std::exception();
   }
 
   return client_connection_fd;
