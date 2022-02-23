@@ -1,3 +1,4 @@
+
 #include "proxy.hpp"
 
 #include <arpa/inet.h>
@@ -57,6 +58,7 @@ void handleNewTab(int client_connection_fd,
       }
 
       else if (method.find("CONNECT") != std::string::npos) {
+        std::cout << id << ": " << headerMap["id"] << std::endl;
         handleConnectRequest(
             hostname, port, client_connection_fd, http_request, logger, headerMap);
       }

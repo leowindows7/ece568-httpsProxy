@@ -48,8 +48,7 @@ bool CacheController::toRevalidate(std::string url_string,
       TimeMaker myTM;
       double diff = maxAge + myTM.getDateNowDiff(responseMap.find("date")->second);
       if (diff <= 0) {
-        std::string msg = id + ": cached, expires at " + responseMap["date"];
-        logger.writeLog(msg);
+        std::string msg = id + ": cached, expires at " + responseMap[]logger.writeLog(msg);
         return true;
       }
 
@@ -107,8 +106,11 @@ bool CacheController::checkExpires(std::string expires_str) {
   std::string ref_time = "Fri, 12 Feb 2022 15:20:01";
   strptime(expires_str.c_str(), "%a, %d %b %Y %H:%M:%S", &expire_struct);
   strptime(ref_time.c_str(), "%a, %d %b %Y %H:%M:%S", &timeRef_struct);
+  // std::string now_str(asctime(tt));
+  // std::cout << now_str <<std::endl;
   double expireElapse = difftime(mktime(&expire_struct), mktime(&timeRef_struct));
   double nowElapse = difftime(mktime(&(*now_struct)), mktime(&timeRef_struct));
+  // std::cout << nowElapse <<std::endl;
   return expireElapse < nowElapse;
 }
 
@@ -135,7 +137,7 @@ int CacheController::getMaxage(std::string cacheControl_str) {
   if ((pos = cacheControl_str.find("max-age=")) != std::string::npos) {
     age = std::stoi(cacheControl_str.substr(pos + 8, cacheControl_str.length()));
   }
-
+  // std::cout << age << std::endl;
   return age;
 }
 

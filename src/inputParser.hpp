@@ -14,7 +14,7 @@ class InputParser {
     if (argc < 2) {
       // TODO: refactor this to throw exception
       std::cerr << "Error: wrong command format" << std::endl;
-      exit(EXIT_FAILURE);
+      throw std::exception();
     }
 
     std::unordered_map<std::string, U> parsedOpt;
@@ -27,7 +27,7 @@ class InputParser {
       if (ss.fail()) {
         // TODO: throw exception
         fprintf(stderr, "Exception: invalid converion for parameter %s\n", argv[i]);
-        exit(EXIT_FAILURE);
+        throw std::exception();
       }
 
       std::string option =

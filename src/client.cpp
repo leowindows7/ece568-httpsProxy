@@ -24,7 +24,6 @@ std::string Client::connectToHost(std::string hostname,
   Network::sendRequest(socket_fd, http_request.c_str(), http_request.size());
 
   std::string response = Network::recvRequest(socket_fd);
-  std::cout << response << std::endl;
   std::string validResponse = response;
   // find the end of header
   while (validResponse.find("\r\n\r\n") == std::string::npos) {
@@ -43,7 +42,6 @@ std::string Client::connectToHost(std::string hostname,
 
   // start to parse data
   Network::assembleValidResponse(socket_fd, validResponse, contentLength);
-  std::cout << validResponse << std::endl << validResponse.size() << std::endl;
 
   return validResponse;
 }

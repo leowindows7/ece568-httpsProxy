@@ -34,7 +34,7 @@ class Network {
              hostName, std::to_string(port_num).c_str(), &hints, &socketInfo)) != 0) {
       // TODO: throw exception
       fprintf(stderr, "Error: getaddrinfo error %s\n", gai_strerror(status));
-      exit(EXIT_FAILURE);
+      throw std::exception();
     }
 
     // TODO: refactor to loop through linked list
@@ -43,7 +43,7 @@ class Network {
         -1) {
       // TODO: throw exception
       perror("socket error");
-      exit(EXIT_FAILURE);
+      throw std::exception();
     }
 
     std::pair<T, U> connectInfo(socketfd, socketInfo);
@@ -56,7 +56,7 @@ class Network {
     while ((num_bytes < size)) {
       if ((recv_bytes = send(client_connection_fd, msg, size, 0)) == -1) {
         perror("send");
-        exit(EXIT_FAILURE);
+        throw std::exception();
       }
 
       num_bytes += recv_bytes;
@@ -68,7 +68,7 @@ class Network {
     int num_bytes = 0;
     if ((num_bytes = recv(connection_fd, buf, sizeof(buf), 0)) == -1) {
       perror("recv");
-      exit(EXIT_FAILURE);
+      throw std::exception();
     }
     buf[num_bytes] = '\0';
 
@@ -79,7 +79,7 @@ class Network {
     int num_bytes = 0;
     if ((num_bytes = recv(connection_fd, recvBuf, MAX_MSG_LENGTH, 0)) == -1) {
       perror("recv");
-      exit(EXIT_FAILURE);
+      throw std::exception();
     }
     recvBuf[num_bytes] = '\0';
     return num_bytes;
@@ -117,7 +117,6 @@ class Network {
       if (close(socketfd) == -1) {
         // TODO: throw exception
         perror("~Network() close");
-        exit(EXIT_FAILURE);
       }
     }
   }

@@ -5,7 +5,6 @@
 
 #include <cstdio>
 #include <cstdlib>
-
 #define STDIN 0
 #define STDOUT 1
 #define STDERR 2
@@ -34,6 +33,14 @@ void create_daemon() {
     exit(EXIT_FAILURE);
   }
 
+  char command[] = {'.', '/', 'p', 'r', 'o', 'x', 'y', '\0'};
+  char * argument_list[] = {command, NULL};
+  int execvp_status = execvp(command, argument_list);
+  if (execvp_status == -1) {
+    printf("Process did not terminate correctly\n");
+    exit(1);
+  }
+
   if (pid != 0) {
     exit(EXIT_SUCCESS);
   }  // exit parent
@@ -45,9 +52,13 @@ void create_daemon() {
     exit(EXIT_FAILURE);
   }
 
-  int ret_in = dup2(STDIN, dev_null_fd);
-  int ret_out = dup2(STDOUT, dev_null_fd);
-  int ret_err = dup2(STDERR, dev_null_fd);
+  int ret_in = dup2(dev_null_fd, STDIN);
+  int ret_out = dup2(dev_null_fd, STDOUT);
+  int ret_err = dup2(dev_null_fd, STDERR);
+
+  fclose(stdin);
+  fclose(stdout);
+  fclose(stderr);
 
   if (ret_in == -1 || ret_err == -1 || ret_out == -1) {
     perror("Error:");
@@ -64,7 +75,9 @@ int main() {
   printf("Creating daemon\n");
   create_daemon();
   printf("Successful create daemon\n");
-  while (1) {
-    sleep(2);
-  }
+
+  // while (1)
+  // {
+  //   sleep(2);
+  // }
 }
